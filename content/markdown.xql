@@ -123,7 +123,7 @@ declare %private function md:code($block as xs:string) {
         let $lang := $tokens//fn:group[1]
         let $code := $tokens//fn:group[2]
         return
-            <pre>
+            <pre class="code">
             { if ($lang != "") then attribute data-language { $lang } else () }
             { $code/text() }
             </pre>
