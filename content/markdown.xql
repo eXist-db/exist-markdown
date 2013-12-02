@@ -10,6 +10,7 @@ declare variable $md:BLOCK_HANDLERS :=
     md:quote#1,
     md:code#1,
     md:list#1,
+    md:table#1,
     md:link-definition#1,
     md:paragraph#1;
 
@@ -25,7 +26,7 @@ declare function md:parse($input) {
     let $output := md:process-inlines($cleaned, $md:SPAN_HANDLERS, $blocks)
     return
 (:    $split:)
-        <body>{$output}</body>
+        $output
 };
 
 declare %private function md:emphasis($text as text(), $content as node()*) {
@@ -123,7 +124,7 @@ declare %private function md:code($block as xs:string) {
         let $lang := $tokens//fn:group[1]
         let $code := $tokens//fn:group[2]
         return
-            <pre class="code">
+            <pre>
             { if ($lang != "") then attribute data-language { $lang } else () }
             { $code/text() }
             </pre>
@@ -136,6 +137,65 @@ declare %private function md:quote($block as xs:string) {
         <blockquote>{ replace($block, "^>\s*", "", "m") }</blockquote>
     else
         ()
+};
+
+declare %private function md:table($block as xs:string) {
+    if (matches($block, ".*\|.*")) then
+        <table class="table table-bordered">
+        {
+            let $block := replace($block, "^\s*(.*)", "$1")
+            let $rows := tokenize($block, "\n")
+            let $colspec :=
+                if (matches($rows[2], "\-{2,}\s*\|")) then
+                    for $column in tokenize($rows[2], "\s*\|\s*")
+                    where $column != ""
+                    return
+                        $column
+                else
+                    ()
+            return (
+                if (exists($colspec)) then
+                    <thead>
+                    {
+                        let $row := replace($rows[1], "^\|(.*)\|$", "$1")
+                        for $column in tokenize($row, "\s*\|\s*")
+                        return
+                            <th>{normalize-space($column)}</th>
+                    }
+                    </thead>
+                else
+                    (),
+                <tbody>
+                {
+                    let $bodyRows := if (exists($colspec)) then subsequence($rows, 3) else $rows
+                    for $row in $bodyRows
+                    return
+                        <tr>
+                        {
+                            let $row := replace($row, "^\|(.*)\|$", "$1")
+                            for $column at $pos in tokenize($row, "\|")
+                            return
+                                <td class="{md:table-col-class($colspec[$pos])}">{normalize-space($column)}</td>
+                        }
+                        </tr>
+                }
+                </tbody>
+            )
+        }
+        </table>
+    else
+        ()
+};
+
+declare function md:table-col-class($spec as xs:string?) {
+    if (empty($spec)) then
+        ()
+    else if (matches($spec, "^:.*?:$")) then
+        "center"
+    else if (matches($spec, ":$")) then
+        "right"
+    else
+        "left"
 };
 
 declare %private function md:list($block as xs:string) {
