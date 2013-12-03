@@ -29,6 +29,12 @@ backticks to allow one backtick inside: `` `ls` ``.
 
 Now let's insert a link to our [homepage][1] using a reference! And here's a direct link to the [documentation](http://exist-db.org/exist/apps/docs "eXist-db Documentation").
 
+## Images
+
+![eXist-db Logo](http://exist-db.org/exist/apps/homepage/img/existdb.gif)
+
+Image linked through reference: ![Read more][glasses].
+
 ## Code Blocks
 
 ```xquery
@@ -47,4 +53,5 @@ return
 
 simple table | column1 | column2
 
-[1]:	http://exist-db.org "eXist-db homepage"
+[1]: http://exist-db.org "eXist-db homepage"
+[glasses]: http://exist-db.org/exist/apps/homepage/img/view.png "Documentation"

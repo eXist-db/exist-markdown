@@ -3,7 +3,7 @@ xquery version "3.0";
 module namespace md="http://exist-db.org/xquery/markdown";
 
 (:declare variable $md:RE_SPLIT_BLOCKS := "(^#+\s*.*?\n+)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)($|\n#|\n(?:\s*\n|$)+)";:)
-declare variable $md:RE_SPLIT_BLOCKS := "(^\s*#+\s*.*?$)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)(\n#|\n(?:\s*\n|$)+)";
+declare variable $md:RE_SPLIT_BLOCKS := "(^\[.*?\].*?$)|(^\s*#+\s*.*?$)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)(\n#|\n(?:\s*\n|$)+)";
 
 declare variable $md:BLOCK_HANDLERS :=
     md:heading#1,
@@ -16,11 +16,12 @@ declare variable $md:BLOCK_HANDLERS :=
 
 declare variable $md:SPAN_HANDLERS := 
     md:emphasis#2,
+    md:image#2,
     md:link#2,
     md:code#2;
 
 declare function md:parse($input) {
-	let $split := analyze-string(replace($input, "\t", "    "), $md:RE_SPLIT_BLOCKS, "sm")
+	let $split := analyze-string(replace($input || "&#10;", "\t", "    "), $md:RE_SPLIT_BLOCKS, "sm")
     let $blocks := <body>{md:parse-blocks($split/fn:match/fn:group[1]/text())}</body>
     let $cleaned := md:cleanup($blocks/*[1])
     let $output := md:process-inlines($cleaned, $md:SPAN_HANDLERS, $blocks)
@@ -45,7 +46,38 @@ declare %private function md:emphasis($text as text(), $content as node()*) {
 
 declare %private function md:link($text as text(), $content as node()*) {
     let $analyzed := analyze-string($text, "\[(.*?)?\]\s*([\[(])(.*?)[\])]")
-    for $token in $analyzed/*
+    return
+        md:link-or-image($analyzed, $content, function($url, $title, $text) {
+            <a href="{$url}">
+            {
+                if (exists($title)) then
+                    attribute title { $title }
+                else
+                    ()
+            }
+            { $text }
+            </a>
+        })
+};
+
+declare %private function md:image($text as text(), $content as node()*) {
+    let $analyzed := analyze-string($text, "\!\[(.*?)?\]\s*([\[(])(.*?)[\])]")
+    return
+        md:link-or-image($analyzed, $content, function($url, $title, $text) {
+            <img src="{$url}" alt="{$text}">
+            {
+                if (exists($title)) then
+                    attribute title { $title }
+                else
+                    ()
+            }
+            </img>
+        })
+};
+
+declare %private function md:link-or-image($analyzed as element(), $content as node()*,
+    $render as function(xs:string, xs:string?, xs:string?) as element()) {
+	for $token in $analyzed/*
     return
         typeswitch($token)
             case element(fn:match) return
@@ -66,19 +98,14 @@ declare %private function md:link($text as text(), $content as node()*) {
                         ()
                 return
                     if ($type = "(") then
-                        <a href="{$link}">
-                            { if ($title) then attribute title { $title } else () }
-                            {$text}
-                        </a>
+                        $render($link, $title, $text)
                     else
                         let $def := $content//a[@class='linkdef'][@id = $link/string()]
                         return
                             if ($def) then
-                                <a href="{$def/@href}">
-                                    {$def/@title, $text}
-                                </a>
+                                $render($def/@href, $def/@title, $text)
                             else
-                                <a href="#">No link definition found for id "{$link/string()}"</a>
+                                $render("#", (), "No link definition found for id " || $link/string())
             default return
                 $token/text()
 };
