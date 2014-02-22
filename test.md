@@ -1,12 +1,16 @@
+# Supported Markdown syntax
 
-# Lorem Ipsum
+The parser extends the [original markdown][3] proposal with fenced code blocks and tables. These are additional features found in [Github flavored markdown][2].
+
+## Paragraphs
+Paragraphs are separated from following blocks by a blank line. 
+A single line break does **not** start a new paragraph.
+
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur nec lobortis magna. Fusce vestibulum felis a eros suscipit mattis. Pellentesque sit amet enim libero. Sed sed tempus nibh. Ut pellentesque quam ac bibendum iaculis. Suspendisse **vitae** interdum risus, convallis auctor urna. Mauris vel sapien ut sapien mollis rhoncus non a nibh. Nullam vulputate consequat purus, ut varius justo ornare vel. Etiam ornare diam at velit varius volutpat. Mauris vel luctus mi, at fermentum purus. *Vestibulum ante ipsum* primis in faucibus orci luctus et ultrices posuere cubilia Curae; Cras lobortis est dolor, et tristique lorem egestas vitae. Sed feugiat dictum nunc. Nullam ultricies vehicula aliquam. Cras felis ante, ultrices sed lacinia et, pharetra in tellus. Vivamus scelerisque ut mi a dapibus.
-
-Aliquam et nulla dictum, sollicitudin lacus et, congue elit. Phasellus feugiat, dui at elementum pellentesque, dolor tellus vestibulum leo, at convallis elit turpis quis ante. Morbi a quam mauris. Fusce lobortis facilisis volutpat. Quisque eget egestas dolor, ut ullamcorper tellus. Nulla facilisi. Aenean molestie pharetra ante nec accumsan. Integer id aliquam quam. Phasellus at libero felis. Aenean congue metus tortor.
 
 ## Code
 
-Inline code: `request:get-parameter()`. Using two 
+To format inline code snippets, surround them with a single backtick: `request:get-parameter()`. Use two 
 backticks to allow one backtick inside: `` `ls` ``.
 
 ## Lists
@@ -27,7 +31,9 @@ backticks to allow one backtick inside: `` `ls` ``.
 
 ## Links
 
-Now let's insert a link to our [homepage][1] using a reference! And here's a direct link to the [documentation](http://exist-db.org/exist/apps/docs "eXist-db Documentation").
+Links can be specified directly or by reference.
+
+This [link][1] references a link definition given at the end of the document ! And here's a direct link to the eXist [documentation](http://exist-db.org/exist/apps/docs "eXist-db Documentation").
 
 ## Images
 
@@ -54,4 +60,6 @@ return
 simple table | column1 | column2
 
 [1]: http://exist-db.org "eXist-db homepage"
+[2]: https://help.github.com/articles/github-flavored-markdown
+[3]: http://daringfireball.net/projects/markdown/syntax
 [glasses]: http://exist-db.org/exist/apps/homepage/img/view.png "Documentation"
