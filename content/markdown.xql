@@ -3,26 +3,43 @@ xquery version "3.0";
 module namespace md="http://exist-db.org/xquery/markdown";
 
 (:declare variable $md:RE_SPLIT_BLOCKS := "(^#+\s*.*?\n+)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)($|\n#|\n(?:\s*\n|$)+)";:)
-declare variable $md:RE_SPLIT_BLOCKS := "(^\[.*?\].*?$)|(^\s*#+\s*.*?$)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)(\n#|\n(?:\s*\n|$)+)";
+declare variable $md:RE_SPLIT_BLOCKS := "(^\[.*?\].*?$)|(^\s*#+\s*.*?$)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)(\n(?:\s*\n|$)+)";
 
 declare variable $md:BLOCK_HANDLERS :=
-    md:heading#1,
-    md:quote#1,
-    md:code#1,
-    md:list#1,
-    md:table#1,
-    md:link-definition#1,
-    md:paragraph#1;
+    md:heading#2,
+    md:quote#2,
+    md:code#2,
+    md:list#2,
+    md:table#2,
+    md:link-definition#2,
+    md:paragraph#2;
 
 declare variable $md:SPAN_HANDLERS := 
     md:emphasis#2,
     md:image#2,
     md:link#2,
-    md:code#2;
+    md:inline-code#2,
+    md:text#2;
 
-declare function md:parse($input) {
+declare variable $md:CONFIG := map {
+    "code-block" := function($language as xs:string, $code as xs:string) {
+        <pre data-language="{$language}">{$code}</pre>
+    },
+    "heading" := function($level as xs:int, $content as xs:string*) {
+        element { "h" || $level } {
+            $content
+        }
+    }
+};
+
+declare function md:parse($input as xs:string?) {
+    md:parse($input, ())
+};
+
+declare function md:parse($input as xs:string?, $config as map(*)?) {
+    let $config := if (exists($config)) then md:merge-config($config) else $md:CONFIG
 	let $split := analyze-string(replace($input || "&#10;", "\t", "    "), $md:RE_SPLIT_BLOCKS, "sm")
-    let $blocks := <body>{md:parse-blocks($split/fn:match/fn:group[1]/text())}</body>
+    let $blocks := <body>{md:parse-blocks($split/fn:match/fn:group[1]/text(), $config)}</body>
     let $cleaned := md:cleanup($blocks/*[1])
     let $output := md:process-inlines($cleaned, $md:SPAN_HANDLERS, $blocks)
     return
@@ -30,8 +47,16 @@ declare function md:parse($input) {
         $output
 };
 
+declare %private function md:merge-config($config as map(*)) {
+    map:new(
+        for $key in map:keys($md:CONFIG)
+        return
+            map:entry($key, if (map:contains($config, $key)) then $config($key) else $md:CONFIG($key))
+    )
+};
+
 declare %private function md:emphasis($text as text(), $content as node()*) {
-    let $analyzed := analyze-string($text, "[\*_]{1,2}([^\*_]+)[\*_]{1,2}")
+    let $analyzed := analyze-string($text, "(?<!\\)[\*_]{1,2}([^\*_]+)(?<!\\)[\*_]{1,2}")
     for $token in $analyzed/*
     return
         typeswitch($token)
@@ -45,7 +70,8 @@ declare %private function md:emphasis($text as text(), $content as node()*) {
 };
 
 declare %private function md:link($text as text(), $content as node()*) {
-    let $analyzed := analyze-string($text, "\[(.*?)?\]\s*([\[(])(.*?)[\])]")
+    let $analyzed := analyze-string($text, "(?<!\\)\[(.*?)?\]\s*([\[(])(.*?)[\])]")
+    let $log := util:log("INFO", ("Analyzing ", $text, " Found: ", $analyzed))
     return
         md:link-or-image($analyzed, $content, function($url, $title, $text) {
             <a href="{$url}">
@@ -61,7 +87,7 @@ declare %private function md:link($text as text(), $content as node()*) {
 };
 
 declare %private function md:image($text as text(), $content as node()*) {
-    let $analyzed := analyze-string($text, "\!\[(.*?)?\]\s*([\[(])(.*?)[\])]")
+    let $analyzed := analyze-string($text, "(?<!\\)\!\[(.*?)?\]\s*([\[(])(.*?)[\])]")
     return
         md:link-or-image($analyzed, $content, function($url, $title, $text) {
             <img src="{$url}" alt="{$text}">
@@ -110,8 +136,8 @@ declare %private function md:link-or-image($analyzed as element(), $content as n
                 $token/text()
 };
 
-declare %private function md:code($text as text(), $content as node()) {
-    let $analyzed := analyze-string($text, "`([^`]+)`|``(.*?)``")
+declare %private function md:inline-code($text as text(), $content as node()) {
+    let $analyzed := analyze-string($text, "(?<!\\)`([^`]+)(?<!\\)`|(?<!\\)``(.*?)(?<!\\)``")
     for $token in $analyzed/*
     return
         typeswitch($token)
@@ -121,7 +147,11 @@ declare %private function md:code($text as text(), $content as node()) {
                 $token/text()
 };
 
-declare %private function md:paragraph($block as xs:string) {
+declare function md:text($text as text(), $content as node()*) {
+    replace($text, "\\", "")
+};
+
+declare %private function md:paragraph($block as xs:string, $config as map(*)) {
     let $normalized := normalize-space($block)
     return
         if (string-length($normalized) > 0) then
@@ -130,43 +160,41 @@ declare %private function md:paragraph($block as xs:string) {
             ()
 };
 
-declare %private function md:heading($block as xs:string) {
+declare %private function md:heading($block as xs:string, $config as map(*)) {
     if (matches($block, "\n*==+$")) then
-        <h1>{ replace($block, "^(.*)\s*=+", "$1") }</h1>
+        $config("heading")(1, replace($block, "^(.*)\s*=+", "$1"))
     else if (matches($block, "\n*\-\-+$")) then
-        <h2>{ replace($block, "^(.*)\s*\-+", "$1") }</h2>
-    else if (matches($block, "^\n*#{1,6}")) then
-        let $level := replace($block, "^\n*(#+).*", "$1")
+        $config("heading")(2, replace($block, "^(.*)\s*\-+", "$1"))
+    else if (matches($block, "^\s*#{1,6}")) then
+        let $level := replace($block, "^\s*(#+).*", "$1")
         return
-            element { "h" || string-length($level) } {
-                replace($block, "^\n*#{1,6}\s*(.*)$", "$1")
-            }
+            $config("heading")(
+                string-length($level),
+                replace($block, "^\s*#{1,6}\s*(.*)$", "$1")
+            )
     else
         ()
 };
 
-declare %private function md:code($block as xs:string) {
+declare %private function md:code($block as xs:string, $config as map(*)) {
     if (matches($block, "^`{3,}.*\n.*?`{3,}$", "ms")) then
         let $tokens := analyze-string($block, "^`{3,}(.*?)\n(.*)`{3,}$", "ms")
         let $lang := $tokens//fn:group[1]
         let $code := $tokens//fn:group[2]
         return
-            <pre>
-            { if ($lang != "") then attribute data-language { $lang } else () }
-            { $code/text() }
-            </pre>
+            $config("code-block")($lang, $code/text())
     else
         ()
 };
 
-declare %private function md:quote($block as xs:string) {
+declare %private function md:quote($block as xs:string, $config as map(*)) {
     if (matches($block, "^>")) then
         <blockquote>{ replace($block, "^>\s*", "", "m") }</blockquote>
     else
         ()
 };
 
-declare %private function md:table($block as xs:string) {
+declare %private function md:table($block as xs:string, $config as map(*)) {
     if (matches($block, ".*\|.*")) then
         <table class="table table-bordered">
         {
@@ -225,13 +253,14 @@ declare function md:table-col-class($spec as xs:string?) {
         "left"
 };
 
-declare %private function md:list($block as xs:string) {
+declare %private function md:list($block as xs:string, $config as map(*)) {
     if (matches($block, "^\s*([\*\+\-]|\d\.\s+\S)")) then
         let $analyzed := analyze-string($block, "^\s*(?:[\*\+\-]|\d\.)\s*", "ms")
         for $match in $analyzed/fn:match
-        let $spaces := replace($match, "\n*(\s*)\n*\S+", "$1")
+        let $spaces := replace(replace($match, "^\s*\n", ""), "^(\s*?)\S.*$", "$1")
         return
-            <li type="{if (matches($match, "^\s*\d\.\s+")) then 'ol' else 'ul'}" indent="{string-length($spaces)}">
+            <li type="{if (matches($match, "^\s*\d\.\s+")) then 'ol' else 'ul'}"
+                indent="{string-length($spaces)}">
             { 
                 let $text := 
                     ($match/following-sibling::fn:non-match except 
@@ -244,8 +273,8 @@ declare %private function md:list($block as xs:string) {
         ()
 };
 
-declare %private function md:link-definition($block as xs:string) {
-    let $analyzed := analyze-string($block, '^\s*\[(.*?)\]:\s*(.*?)\s*"(.*?)"')
+declare %private function md:link-definition($block as xs:string, $config as map(*)) {
+    let $analyzed := analyze-string($block, '^\s*\[(.*?)\]:\s*(.*?)(?:$|\s*"([^"]+)")$')
     return
         if ($analyzed/fn:match) then
             <a class="linkdef" id="{$analyzed//fn:group[1]}" href="{$analyzed//fn:group[2]}">
@@ -255,23 +284,23 @@ declare %private function md:link-definition($block as xs:string) {
             ()
 };
 
-declare %private function md:handle-block($block as xs:string, $handlers as function(*)*) {
+declare %private function md:handle-block($block as xs:string, $handlers as function(*)*, $config as map(*)) {
     if (empty($handlers)) then
         ()
     else
         let $handler := head($handlers)
-        let $result := $handler($block)
+        let $result := $handler($block, $config)
         return
             if (exists($result)) then
                 $result
             else
-                md:handle-block($block, tail($handlers))
+                md:handle-block($block, tail($handlers), $config)
 };
 
-declare %private function md:parse-blocks($splits as xs:string*) {
+declare %private function md:parse-blocks($splits as xs:string*, $config as map(*)) {
     for $block in $splits
     return
-        md:handle-block($block, $md:BLOCK_HANDLERS)
+        md:handle-block($block, $md:BLOCK_HANDLERS, $config)
 };
 
 declare %private function md:inline($nodes as node()*, $handler as function(*), $content as node()?) {
@@ -310,7 +339,7 @@ declare %private function md:list-item($item as element(li), $indent as xs:int) 
                         }
                     }
                 </li>,
-                for $next in $next/following-sibling::li[@indent = $indent] 
+                for $next in $next/following-sibling::li[@indent = $indent][1]
                     except $item/following-sibling::*[not(self::li)]/following-sibling::li
                 return
                     md:list-item($next, $indent)
@@ -322,7 +351,7 @@ declare %private function md:list-item($item as element(li), $indent as xs:int) 
         ()
 };
 
-declare %private function md:cleanup($nodes as element()?) {
+declare %private function md:cleanup($nodes as node()*) {
     for $node in $nodes
     return
         typeswitch($node)
