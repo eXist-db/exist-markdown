@@ -12,6 +12,7 @@ declare variable $md:BLOCK_HANDLERS :=
     md:list#2,
     md:table#2,
     md:link-definition#2,
+    md:html-block#2,
     md:paragraph#2;
 
 declare variable $md:SPAN_HANDLERS := 
@@ -19,6 +20,7 @@ declare variable $md:SPAN_HANDLERS :=
     md:image#2,
     md:link#2,
     md:inline-code#2,
+    md:inline-html#2,
     md:text#2;
 
 declare variable $md:CONFIG := map {
@@ -69,9 +71,19 @@ declare %private function md:emphasis($text as text(), $content as node()*) {
                 $token/text()
 };
 
+declare function md:inline-html($text as text(), $content as node()*) {
+    let $analyzed := analyze-string($text, "((?<!\\)&lt;.+?(&lt;/[^&gt;]+&gt;|&gt;/))")
+    for $token in $analyzed/*
+    return
+        typeswitch($token)
+            case element(fn:match) return
+                util:parse-html($token/fn:group/string())
+            default return
+                $token/text()
+};
+
 declare %private function md:link($text as text(), $content as node()*) {
     let $analyzed := analyze-string($text, "(?<!\\)\[(.*?)?\]\s*([\[(])(.*?)[\])]")
-    let $log := util:log("INFO", ("Analyzing ", $text, " Found: ", $analyzed))
     return
         md:link-or-image($analyzed, $content, function($url, $title, $text) {
             <a href="{$url}">
@@ -269,6 +281,13 @@ declare %private function md:list($block as xs:string, $config as map(*)) {
                     replace($text, "\n+$", "")
             }
             </li>
+    else
+        ()
+};
+
+declare function md:html-block($block as xs:string, $config as map(*)) {
+    if (matches($block, "^\s*&lt;[^&gt;&lt;]+&gt;")) then
+        util:parse-html($block)
     else
         ()
 };

@@ -37,7 +37,7 @@ This [link][1] references a link definition given at the end of the document ! A
 
 ## Images
 
-![eXist-db Logo](http://exist-db.org/exist/apps/homepage/img/existdb.gif)
+![eXist-db Logo](http://exist-db.org/exist/apps/homepage/resources/img/existdb.gif)
 
 Image linked through reference: ![Read more][glasses].
 
@@ -59,7 +59,17 @@ return
 
 simple table | column1 | column2
 
+## HTML Blocks
+
+<figure>
+    <img src="http://exist-db.org/exist/apps/homepage/resources/img/existdb.gif"/>
+</figure>
+
+## Inline HTML
+
+A <span style="color: red;">paragraph <span style="color: green;">containing</span></span> some <mark>inline</mark> <code>HTML</code>.
+
 [1]: http://exist-db.org "eXist-db homepage"
 [2]: https://help.github.com/articles/github-flavored-markdown
 [3]: http://daringfireball.net/projects/markdown/syntax
-[glasses]: http://exist-db.org/exist/apps/homepage/img/view.png "Documentation"
+[glasses]: http://exist-db.org/exist/apps/homepage/resources/img/book-cover.gif "Documentation"

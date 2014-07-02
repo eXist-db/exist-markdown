@@ -2,12 +2,19 @@
 <meta xmlns="http://exist-db.org/xquery/repo">
     <description>A markdown parser written in XQuery.</description>
     <author>Wolfgang Meier</author>
-    <website/>
-    <status>alpha</status>
+    <website>https://github.com/wolfgangmm/exist-markdown</website>
+    <status>beta</status>
     <license>GNU-LGPL</license>
     <copyright>true</copyright>
     <type>application</type>
     <target>markdown</target>
     <prepare>pre-install.xql</prepare>
     <finish/>
+    <changelog>
+        <change version="0.3">
+            <ul xmlns="http://www.w3.org/1999/xhtml">
+                <li>Support HTML blocks and inline HTML</li>
+            </ul>
+        </change>
+    </changelog>
 </meta>
