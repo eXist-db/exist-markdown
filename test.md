@@ -61,9 +61,30 @@ simple table | column1 | column2
 
 ## HTML Blocks
 
+```xml
 <figure>
     <img src="http://exist-db.org/exist/apps/homepage/resources/img/existdb.gif"/>
 </figure>
+```
+
+is rendered as:
+
+<figure>
+    <img src="http://exist-db.org/exist/apps/homepage/resources/img/existdb.gif"/>
+</figure>
+
+HTML block containing markdown:
+
+<div class="row">
+    <div class="col-md-6">
+        First column in **two column layout**.
+        
+        Second paragraph.
+    </div>
+    <div class="col-md-6">
+        Second column in two column layout.
+    </div>
+</div>
 
 ## Inline HTML
 

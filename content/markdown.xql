@@ -2,8 +2,10 @@ xquery version "3.0";
 
 module namespace md="http://exist-db.org/xquery/markdown";
 
+import module namespace console="http://exist-db.org/xquery/console" at "java:org.exist.console.xquery.ConsoleModule";
+
 (:declare variable $md:RE_SPLIT_BLOCKS := "(^#+\s*.*?\n+)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)($|\n#|\n(?:\s*\n|$)+)";:)
-declare variable $md:RE_SPLIT_BLOCKS := "(^\[.*?\].*?$)|(^\s*#+\s*.*?$)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)(\n(?:\s*\n|$)+)";
+declare variable $md:RE_SPLIT_BLOCKS := "(^&lt;.+\n&lt;/[^&lt;&gt;]+&gt;)|(^\[.*?\].*?\s*\n+)|(^\s*#+\s*.*?$)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)(\n(?:\s*\n|$)+)";
 
 declare variable $md:BLOCK_HANDLERS :=
     md:heading#2,
@@ -45,8 +47,27 @@ declare function md:parse($input as xs:string?, $config as map(*)?) {
     let $cleaned := md:cleanup($blocks/*[1])
     let $output := md:process-inlines($cleaned, $md:SPAN_HANDLERS, $blocks)
     return
+(:        $output:)
 (:    $split:)
-        $output
+        md:recurse($output, $config)
+};
+
+(:~
+ : Process output to expand markdown sections which were nested inside literal HTML
+ :)
+declare function md:recurse($nodes as node()*, $config as map(*)) {
+    for $node in $nodes
+    return
+        typeswitch($node)
+            case element(markdown) return
+                md:parse($node/string(), $config)
+            case element() return
+                element { node-name($node) } {
+                    $node/@*,
+                    md:recurse($node/node(), $config)
+                }
+            default return
+                $node
 };
 
 declare %private function md:merge-config($config as map(*)) {
@@ -77,7 +98,9 @@ declare function md:inline-html($text as text(), $content as node()*) {
     return
         typeswitch($token)
             case element(fn:match) return
-                util:parse-html($token/fn:group/string())
+                let $html := util:parse-html($token/fn:group/string())
+                return
+                    ($html/HTML/BODY/node(), $html/HTML/HEAD/node(), $html)[1]
             default return
                 $token/text()
 };
@@ -285,15 +308,39 @@ declare %private function md:list($block as xs:string, $config as map(*)) {
         ()
 };
 
-declare function md:html-block($block as xs:string, $config as map(*)) {
+(:~
+ : Process HTML block. Line must start with < and the block extends until the next line
+ : starting with a </. Contrary to original markdown, this parser supports markdown code
+ : nested inside a HTML block.
+ :)
+declare %private function md:html-block($block as xs:string, $config as map(*)) {
     if (matches($block, "^\s*&lt;[^&gt;&lt;]+&gt;")) then
-        util:parse-html($block)
+        let $block := util:parse-html($block)
+        return
+            md:parse-html(($block/HTML/BODY/node(), $block/HTML/HEAD/node(), $block)[1], $config)
     else
         ()
 };
 
+(:~
+ : HTML blocks may contain nested markdown. This is not parsed immediately, but
+ : marked with <markdown>text</markdown> for later processing.
+ :)
+declare %private function md:parse-html($nodes as node()*, $config as map(*)) {
+    for $node in $nodes
+    return
+        typeswitch($node)
+            case element() return
+                element { node-name($node) } {
+                    $node/@*,
+                    md:parse-html($node/node(), $config)
+                }
+            default return
+                <markdown>{$node/string()}</markdown>
+};
+
 declare %private function md:link-definition($block as xs:string, $config as map(*)) {
-    let $analyzed := analyze-string($block, '^\s*\[(.*?)\]:\s*(.*?)(?:$|\s*"([^"]+)")$')
+    let $analyzed := analyze-string($block, '^\s*\[(.*?)\]:\s*(.*?)(?:\n*$|\s*"([^"]+)")\n*$')
     return
         if ($analyzed/fn:match) then
             <a class="linkdef" id="{$analyzed//fn:group[1]}" href="{$analyzed//fn:group[2]}">
@@ -326,6 +373,8 @@ declare %private function md:inline($nodes as node()*, $handler as function(*), 
     for $node in $nodes
     return
         typeswitch ($node)
+            case element(markdown) return
+                $node
             case element() return
                 element { node-name($node) } {
                     $node/@*,
