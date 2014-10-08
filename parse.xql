@@ -31,7 +31,7 @@ declare variable $local:MD_CONFIG := map {
 <html>
     <head>
         <title>Markdown Parser Test</title>
-        <link rel="stylesheet" type="text/css" href="$shared/resources/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="$shared/resources/css/bootstrap-3.0.3.min.css"/>
         <style type="text/css">
             td.left {{ text-align: left; }}
             td.right {{ text-align: right; }}
