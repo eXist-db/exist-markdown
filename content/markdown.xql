@@ -2,8 +2,6 @@ xquery version "3.0";
 
 module namespace md="http://exist-db.org/xquery/markdown";
 
-import module namespace console="http://exist-db.org/xquery/console" at "java:org.exist.console.xquery.ConsoleModule";
-
 (:declare variable $md:RE_SPLIT_BLOCKS := "(^#+\s*.*?\n+)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)($|\n#|\n(?:\s*\n|$)+)";:)
 declare variable $md:RE_SPLIT_BLOCKS := "(^&lt;.+\n&lt;/[^&lt;&gt;]+&gt;)|(^\[.*?\].*?\s*\n+)|(^\s*#+\s*.*?$)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)(\n(?:\s*\n|$)+)";
 
@@ -18,9 +16,9 @@ declare variable $md:BLOCK_HANDLERS :=
     md:paragraph#2;
 
 declare variable $md:SPAN_HANDLERS := 
-    md:emphasis#2,
     md:image#2,
     md:link#2,
+    md:emphasis#2,
     md:inline-code#2,
     md:inline-html#2,
     md:text#2;
@@ -316,8 +314,9 @@ declare %private function md:list($block as xs:string, $config as map(*)) {
 declare %private function md:html-block($block as xs:string, $config as map(*)) {
     if (matches($block, "^\s*&lt;[^&gt;&lt;]+&gt;")) then
         let $block := util:parse-html($block)
+        let $inner := ($block/HTML/BODY/node(), $block/HTML/HEAD/node())
         return
-            md:parse-html(($block/HTML/BODY/node(), $block/HTML/HEAD/node(), $block)[1], $config)
+            md:parse-html(if (exists($inner)) then $inner else $block, $config)
     else
         ()
 };
