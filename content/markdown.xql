@@ -46,7 +46,7 @@ declare function md:parse($input as xs:string?, $config as map(*)?) {
     let $output := md:process-inlines($cleaned, $md:SPAN_HANDLERS, $blocks)
     return
 (:        $output:)
-(:    $split:)
+   (: $split :)
         md:recurse($output, $config)
 };
 
@@ -221,8 +221,8 @@ declare %private function md:code($block as xs:string, $config as map(*)) {
 };
 
 declare %private function md:quote($block as xs:string, $config as map(*)) {
-    if (matches($block, "^>")) then
-        <blockquote>{ replace($block, "^>\s*", "", "m") }</blockquote>
+    if (matches($block, "^>", "ms")) then
+        <blockquote>{ replace($block, "^>\s*?", "", "m") }</blockquote>
     else
         ()
 };
@@ -299,12 +299,28 @@ declare %private function md:list($block as xs:string, $config as map(*)) {
                     ($match/following-sibling::fn:non-match except 
                         $match/following-sibling::fn:match/following-sibling::fn:non-match) 
                 return
-                    replace($text, "\n+$", "")
+                    md:task-list(replace($text, "\n+$", ""))
             }
             </li>
     else
         ()
 };
+
+declare function md:task-list($text as xs:string) {
+    if (matches($text, "^\s*\[[xX ]\]")) then
+        let $analyzed := analyze-string($text, "^\s*\[([xX ])\](.*)$")
+        let $checked := $analyzed//fn:group[1]
+        return
+            <label class="checkbox-inline">
+                <input type="checkbox" value="">
+                { if ($checked = ('x', 'X')) then attribute checked { "checked" } else () }
+                </input>
+                { $analyzed//fn:group[2]/string() }
+            </label>
+    else
+        $text
+};
+
 
 (:~
  : Process HTML block. Line must start with < and the block extends until the next line
