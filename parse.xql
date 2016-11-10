@@ -23,7 +23,7 @@ declare variable $local:app-root :=
 ;
 
 declare variable $local:MD_CONFIG := map {
-    "code-block" := function($language as xs:string, $code as xs:string) {
+    "code-block": function($language as xs:string, $code as xs:string) {
         <div class="code" data-language="{$language}">{$code}</div>
     }
 };
@@ -44,7 +44,7 @@ declare variable $local:MD_CONFIG := map {
         let $inputDoc := util:binary-doc($local:app-root || "/" || $doc)
         let $input := util:binary-to-string($inputDoc)
         return
-            md:parse($input, $local:MD_CONFIG)
+            md:parse($input, ($md:HTML-CONFIG, $local:MD_CONFIG))
     }
         <script type="text/javascript" src="$shared/resources/scripts/jquery/jquery-1.7.1.min.js"/>
         <script type="text/javascript" src="$shared/resources/scripts/ace/ace.js"/>

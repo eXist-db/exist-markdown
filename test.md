@@ -49,9 +49,14 @@ This [link][1] references a link definition given at the end of the document ! A
 
 ## Images
 
-![eXist-db Logo](http://exist-db.org/exist/apps/homepage/resources/img/existdb.gif)
+![eXist-db Logo](http://exist-db.org/exist/apps/homepage/resources/img/existdb.gif "Our Logo")
 
 Image linked through reference: ![Read more][glasses].
+
+## Labels
+
+* {customer: eXist Solutions, foo enterprise}
+* {important}
 
 ## Code Blocks
 
