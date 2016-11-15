@@ -495,28 +495,26 @@ declare %private function md:list-item($config as map(*), $item as element(md:li
         ()
 };
 
-declare function md:cleanup($config as map(*), $nodes as node()*, $end as node()?) {
+declare function md:cleanup($config as map(*), $nodes as node()*, $parent as node()?) {
     for $node in $nodes
     return
-        if ($end and $node is $end) then
-            ()
-        else
-            typeswitch($node)
-                case element(md:li) return (
-                    $config?list($node/@type, md:list-item($config, $node, $node/@indent)),
-                    md:cleanup($config, $node/following-sibling::*[not(self::md:li)][1], $end)
+        typeswitch($node)
+            case element(md:li) return (
+                $config?list($node/@type, md:list-item($config, $node, $node/@indent)),
+                md:cleanup($config, $node/following-sibling::*[not(self::md:li)][1], $parent)
+            )
+            case element(md:link-target) return
+                md:cleanup($config, $node/following-sibling::*[1], $parent)
+            case element(md:heading) return
+                if ($parent and $node/@level <= $parent/@level) then
+                    ()
+                else (
+                    $config?section((
+                        $config?heading($node/@level, $node/node()),
+                        md:cleanup($config, $node/following-sibling::*[1], $node)
+                    )),
+                    md:cleanup($config, $node/following-sibling::md:heading[@level <= $node/@level][1], $parent)
                 )
-                case element(md:link-target) return
-                    md:cleanup($config, $node/following-sibling::*[1], $end)
-                case element(md:heading) return
-                    let $next := $node/following-sibling::md:heading[@level <= $node/@level][1]
-                    return (
-                        $config?section((
-                            $config?heading($node/@level, $node/node()),
-                            md:cleanup($config, $node/following-sibling::*[1], $next)
-                        )),
-                        md:cleanup($config, $next, ())
-                    )
-                default return
-                    ($node, md:cleanup($config, $node/following-sibling::*[1], $end))
+            default return
+                ($node, md:cleanup($config, $node/following-sibling::*[1], $parent))
 };

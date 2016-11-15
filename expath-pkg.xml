@@ -6,4 +6,8 @@
         <namespace>http://exist-db.org/xquery/markdown</namespace>
         <file>markdown.xql</file>
     </xquery>
+    <xquery>
+        <namespace>http://exist-db.org/xquery/markdown/tei</namespace>
+        <file>tei-config.xql</file>
+    </xquery>
 </package>

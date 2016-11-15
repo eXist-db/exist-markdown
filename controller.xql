@@ -19,13 +19,11 @@ else if ($exist:path = "/") then
     </dispatch>
     
 else if (ends-with($exist:resource, ".md")) then
-    let $mode := request:get-parameter("mode", "html")
-    return
-        <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
-            <forward url="{if ($mode = 'html') then 'parse.xql' else 'tei.xql'}">
-                <add-parameter name="doc" value="{$exist:resource}"/>
-            </forward>
-        </dispatch>
+    <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
+        <forward url="parse.xql">
+            <add-parameter name="doc" value="{$exist:resource}"/>
+        </forward>
+    </dispatch>
     
 else if (contains($exist:path, "/$shared/")) then
     <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
