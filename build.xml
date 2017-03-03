@@ -3,7 +3,7 @@
     <property file="local.build.properties"/>
     <property file="build.properties"/>
     <property name="project.app" value="markdown"/>
-    <property name="build.dir" value="build"/>
+    <property name="build" value="./build"/>
     <property name="server.url" value="http://demo.exist-db.org/exist/apps/public-repo/public/"/>
     <target name="clean">
         <delete failonerror="false">
@@ -19,8 +19,8 @@
                 <filter token="project.version" value="${project.version}"/>
             </filterset>
         </copy>
-        <mkdir dir="${build.dir}"/>
-        <zip basedir="." destfile="${build.dir}/${project.app}-${project.version}.xar" excludes="${build.dir}/*"/>
+        <mkdir dir="${build}"/>
+        <zip basedir="." destfile="${build}/${project.app}-${project.version}.xar" excludes="${build}/*"/>
     </target>
     <target name="upload">
         <input message="Enter password:" addproperty="server.pass" defaultvalue="">
@@ -28,7 +28,7 @@
         </input>
         <property name="xar" value="${project.app}-${project.version}.xar"/>
         <exec executable="curl">
-            <arg line="-T ${build.dir}/${xar} -u admin:${server.pass} ${server.url}/${xar}"/>
+            <arg line="-T ${build}/${xar} -u admin:${server.pass} ${server.url}/${xar}"/>
         </exec>
     </target>
 </project>
