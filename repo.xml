@@ -11,6 +11,14 @@
     <prepare>pre-install.xql</prepare>
     <finish/>
     <changelog>
+        <change version="0.5">
+            <ul xmlns="http://www.w3.org/1999/xhtml">
+                <li>Add TEI output alongside original HTML output</li>
+                <li>Add support for task lists</li>
+                <li>Fix handling of quotes</li>
+                <li>Fix markdown module namespace prefix collision with metadata module</li>
+            </ul>
+        </change>
         <change version="0.4">
             <ul xmlns="http://www.w3.org/1999/xhtml">
                 <li>Allow markdown to occur inside HTML tags</li>
