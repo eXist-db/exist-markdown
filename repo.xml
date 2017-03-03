@@ -11,6 +11,11 @@
     <prepare>pre-install.xql</prepare>
     <finish/>
     <changelog>
+        <change version="0.4">
+            <ul xmlns="http://www.w3.org/1999/xhtml">
+                <li>Allow markdown to occur inside HTML tags</li>
+            </ul>
+        </change>
         <change version="0.3">
             <ul xmlns="http://www.w3.org/1999/xhtml">
                 <li>Support HTML blocks and inline HTML</li>
