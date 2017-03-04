@@ -1,6 +1,6 @@
 xquery version "3.0";
 
-import module namespace md="http://exist-db.org/xquery/markdown" at "content/markdown.xql";
+import module namespace markdown="http://exist-db.org/xquery/markdown" at "content/markdown.xql";
 import module namespace mdt="http://exist-db.org/xquery/markdown/tei" at "content/tei-config.xql";
 
 declare namespace tei="http://www.tei-c.org/ns/1.0";
@@ -91,10 +91,10 @@ let $config :=
     if ($mode = "tei") then
         $mdt:CONFIG
     else
-        ($md:HTML-CONFIG, $local:MD_CONFIG)
+        ($markdown:HTML-CONFIG, $local:MD_CONFIG)
 let $inputDoc := util:binary-doc($local:app-root || "/" || $doc)
 let $input := util:binary-to-string($inputDoc)
-let $content := md:parse($input, $config)
+let $content := markdown:parse($input, $config)
 return
     if ($mode = "tei") then
         local:tei($content)

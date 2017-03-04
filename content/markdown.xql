@@ -1,32 +1,32 @@
 xquery version "3.0";
 
-module namespace md="http://exist-db.org/xquery/markdown";
+module namespace markdown="http://exist-db.org/xquery/markdown";
 
-(:declare variable $md:RE_SPLIT_BLOCKS := "(^#+\s*.*?\n+)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)($|\n#|\n(?:\s*\n|$)+)";:)
-declare variable $md:RE_SPLIT_BLOCKS := "(^&lt;.+\n&lt;/[^&lt;&gt;]+&gt;)|(^\[.*?\].*?\s*\n+)|(^\s*#+\s*.*?$)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)(\n(?:\s*\n|$)+)";
+(:declare variable $markdown:RE_SPLIT_BLOCKS := "(^#+\s*.*?\n+)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)($|\n#|\n(?:\s*\n|$)+)";:)
+declare variable $markdown:RE_SPLIT_BLOCKS := "(^&lt;.+\n&lt;/[^&lt;&gt;]+&gt;)|(^\[.*?\].*?\s*\n+)|(^\s*#+\s*.*?$)|(^`{3,}.*?`{3,}\s*\n)|(^[\s\S]+?)(\n(?:\s*\n|$)+)";
 
-declare variable $md:BLOCK_HANDLERS := (
-    md:heading#2,
-    md:quote#2,
-    md:code#2,
-    md:list#2,
-    md:table#2,
-    md:link-definition#2,
-    md:html-block#2,
-    md:paragraph#2
+declare variable $markdown:BLOCK_HANDLERS := (
+    markdown:heading#2,
+    markdown:quote#2,
+    markdown:code#2,
+    markdown:list#2,
+    markdown:table#2,
+    markdown:link-definition#2,
+    markdown:html-block#2,
+    markdown:paragraph#2
 );
 
-declare variable $md:SPAN_HANDLERS := (
-    md:image#3,
-    md:link#3,
-    md:emphasis#3,
-    md:label#3,
-    md:inline-code#3,
-    md:inline-html#3,
-    md:text#3
+declare variable $markdown:SPAN_HANDLERS := (
+    markdown:image#3,
+    markdown:link#3,
+    markdown:emphasis#3,
+    markdown:label#3,
+    markdown:inline-code#3,
+    markdown:inline-html#3,
+    markdown:text#3
 );
 
-declare variable $md:HTML-CONFIG := map {
+declare variable $markdown:HTML-CONFIG := map {
     "document": function($content) {
         <body>{ $content }</body>
     },
@@ -128,41 +128,41 @@ declare variable $md:HTML-CONFIG := map {
     }
 };
 
-declare function md:parse($input as xs:string?) {
-    md:parse($input, $md:HTML-CONFIG)
+declare function markdown:parse($input as xs:string?) {
+    markdown:parse($input, $markdown:HTML-CONFIG)
 };
 
-declare function md:parse($input as xs:string?, $configs as map(*)+) {
+declare function markdown:parse($input as xs:string?, $configs as map(*)+) {
     let $config := map:merge($configs)
-	let $split := analyze-string(replace($input || "&#10;", "\t", "    "), $md:RE_SPLIT_BLOCKS, "sm")
-    let $blocks := <wrapper>{md:parse-blocks($split/fn:match/fn:group[1]/text(), $config)}</wrapper>
-    let $cleaned := md:cleanup($config, $blocks/*[1], ())
-    let $output := md:process-inlines($config, $cleaned, $md:SPAN_HANDLERS, $blocks)
+	let $split := analyze-string(replace($input || "&#10;", "\t", "    "), $markdown:RE_SPLIT_BLOCKS, "sm")
+    let $blocks := <wrapper>{markdown:parse-blocks($split/fn:match/fn:group[1]/text(), $config)}</wrapper>
+    let $cleaned := markdown:cleanup($config, $blocks/*[1], ())
+    let $output := markdown:process-inlines($config, $cleaned, $markdown:SPAN_HANDLERS, $blocks)
     return
 (:        $output:)
    (: $split :)
-        $config?document(md:recurse($output, $config))
+        $config?document(markdown:recurse($output, $config))
 };
 
 (:~
  : Process output to expand markdown sections which were nested inside literal HTML
  :)
-declare function md:recurse($nodes as node()*, $config as map(*)) {
+declare function markdown:recurse($nodes as node()*, $config as map(*)) {
     for $node in $nodes
     return
         typeswitch($node)
-            case element(md:markdown) return
-                md:parse($node/string(), $config)
+            case element(markdown:markdown) return
+                markdown:parse($node/string(), $config)
             case element() return
                 element { node-name($node) } {
                     $node/@*,
-                    md:recurse($node/node(), $config)
+                    markdown:recurse($node/node(), $config)
                 }
             default return
                 $node
 };
 
-declare %private function md:emphasis($config as map(*), $text as text(), $content as node()*) {
+declare %private function markdown:emphasis($config as map(*), $text as text(), $content as node()*) {
     let $analyzed := analyze-string($text, "(?<!\\)[\*_]{1,2}([^\*_]+)(?<!\\)[\*_]{1,2}")
     for $token in $analyzed/*
     return
@@ -176,7 +176,7 @@ declare %private function md:emphasis($config as map(*), $text as text(), $conte
                 $token/text()
 };
 
-declare function md:inline-html($config as map(*), $text as text(), $content as node()*) {
+declare function markdown:inline-html($config as map(*), $text as text(), $content as node()*) {
     let $analyzed := analyze-string($text, "((?<!\\)&lt;.+?(&lt;/[^&gt;]+&gt;|&gt;/))")
     for $token in $analyzed/*
     return
@@ -189,7 +189,7 @@ declare function md:inline-html($config as map(*), $text as text(), $content as 
                 $token/text()
 };
 
-declare function md:label($config as map(*), $text as text(), $content as node()*) {
+declare function markdown:label($config as map(*), $text as text(), $content as node()*) {
     let $analyzed := analyze-string($text, "\{(.*?)(?:\s*\:\s*(.*?))?\}")
     for $token in $analyzed/*
     return
@@ -204,19 +204,19 @@ declare function md:label($config as map(*), $text as text(), $content as node()
 };
 
 
-declare %private function md:link($config as map(*), $text as text(), $content as node()*) {
+declare %private function markdown:link($config as map(*), $text as text(), $content as node()*) {
     let $analyzed := analyze-string($text, "(?<!\\)\[(.*?)?\]\s*([\[(])(.*?)[\])]")
     return
-        md:link-or-image($config, $analyzed, $content, $config?link)
+        markdown:link-or-image($config, $analyzed, $content, $config?link)
 };
 
-declare %private function md:image($config as map(*), $text as text(), $content as node()*) {
+declare %private function markdown:image($config as map(*), $text as text(), $content as node()*) {
     let $analyzed := analyze-string($text, "(?<!\\)\!\[(.*?)?\]\s*([\[(])(.*?)[\])]")
     return
-        md:link-or-image($config, $analyzed, $content, $config?image)
+        markdown:link-or-image($config, $analyzed, $content, $config?image)
 };
 
-declare %private function md:link-or-image($config as map(*), $analyzed as element(), $content as node()*,
+declare %private function markdown:link-or-image($config as map(*), $analyzed as element(), $content as node()*,
     $render as function(xs:string, xs:string?, xs:string?) as element()) {
 	for $token in $analyzed/*
     return
@@ -241,7 +241,7 @@ declare %private function md:link-or-image($config as map(*), $analyzed as eleme
                     if ($type = "(") then
                         $render($link, $title, $text)
                     else
-                        let $def := $content//md:link-target[@id = $link/string()]
+                        let $def := $content//markdown:link-target[@id = $link/string()]
                         return
                             if ($def) then
                                 $render($def/@href, $def/@title, $text)
@@ -251,7 +251,7 @@ declare %private function md:link-or-image($config as map(*), $analyzed as eleme
                 $token/text()
 };
 
-declare %private function md:inline-code($config as map(*), $text as text(), $content as node()) {
+declare %private function markdown:inline-code($config as map(*), $text as text(), $content as node()) {
     let $analyzed := analyze-string($text, "(?<!\\)`([^`]+)(?<!\\)`|(?<!\\)``(.*?)(?<!\\)``")
     for $token in $analyzed/*
     return
@@ -262,11 +262,11 @@ declare %private function md:inline-code($config as map(*), $text as text(), $co
                 $token/text()
 };
 
-declare function md:text($config as map(*), $text as text(), $content as node()*) {
+declare function markdown:text($config as map(*), $text as text(), $content as node()*) {
     replace($text, "\\", "")
 };
 
-declare %private function md:paragraph($block as xs:string, $config as map(*)) {
+declare %private function markdown:paragraph($block as xs:string, $config as map(*)) {
     let $normalized := normalize-space($block)
     return
         if (string-length($normalized) > 0) then
@@ -275,7 +275,7 @@ declare %private function md:paragraph($block as xs:string, $config as map(*)) {
             ()
 };
 
-declare %private function md:heading($block as xs:string, $config as map(*)) {
+declare %private function markdown:heading($block as xs:string, $config as map(*)) {
     if (matches($block, "\n*==+$")) then
         $config("heading")(1, replace($block, "^(.*)\s*=+", "$1"))
     else if (matches($block, "\n*\-\-+$")) then
@@ -283,12 +283,12 @@ declare %private function md:heading($block as xs:string, $config as map(*)) {
     else if (matches($block, "^\s*#{1,6}")) then
         let $level := replace($block, "^\s*(#+).*", "$1")
         return
-            <md:heading level="{string-length($level)}">{ replace($block, "^\s*#{1,6}\s*(.*)$", "$1")}</md:heading>
+            <markdown:heading level="{string-length($level)}">{ replace($block, "^\s*#{1,6}\s*(.*)$", "$1")}</markdown:heading>
     else
         ()
 };
 
-declare %private function md:code($block as xs:string, $config as map(*)) {
+declare %private function markdown:code($block as xs:string, $config as map(*)) {
     if (matches($block, "^`{3,}.*\n.*?`{3,}$", "ms")) then
         let $tokens := analyze-string($block, "^`{3,}(.*?)\n(.*)`{3,}$", "ms")
         let $lang := $tokens//fn:group[1]
@@ -299,14 +299,14 @@ declare %private function md:code($block as xs:string, $config as map(*)) {
         ()
 };
 
-declare %private function md:quote($block as xs:string, $config as map(*)) {
+declare %private function markdown:quote($block as xs:string, $config as map(*)) {
     if (matches($block, "^>", "ms")) then
         $config?quote(replace($block, "^>\s*?", "", "m"))
     else
         ()
 };
 
-declare %private function md:table($block as xs:string, $config as map(*)) {
+declare %private function markdown:table($block as xs:string, $config as map(*)) {
     if (matches($block, ".*\|.*")) then
         $config?table(
             let $block := replace($block, "^\s*(.*)", "$1")
@@ -340,7 +340,7 @@ declare %private function md:table($block as xs:string, $config as map(*)) {
                             let $row := replace($row, "^\|(.*)\|$", "$1")
                             for $column at $pos in tokenize($row, "\|")
                             return
-                                $config?table-column(normalize-space($column), md:table-col-class($colspec[$pos]))
+                                $config?table-column(normalize-space($column), markdown:table-col-class($colspec[$pos]))
                         )
                 )
             )
@@ -349,7 +349,7 @@ declare %private function md:table($block as xs:string, $config as map(*)) {
         ()
 };
 
-declare function md:table-col-class($spec as xs:string?) {
+declare function markdown:table-col-class($spec as xs:string?) {
     if (empty($spec)) then
         ()
     else if (matches($spec, "^:.*?:$")) then
@@ -360,7 +360,7 @@ declare function md:table-col-class($spec as xs:string?) {
         "left"
 };
 
-declare %private function md:list($block as xs:string, $config as map(*)) {
+declare %private function markdown:list($block as xs:string, $config as map(*)) {
     if (matches($block, "^\s*([\*\+\-]|\d\.\s+\S)")) then
         let $analyzed := analyze-string($block, "^\s*(?:[\*\+\-]|\d\.)\s*", "ms")
         for $match in $analyzed/fn:match
@@ -369,14 +369,14 @@ declare %private function md:list($block as xs:string, $config as map(*)) {
             ($match/following-sibling::fn:non-match except 
                 $match/following-sibling::fn:match/following-sibling::fn:non-match)
         return
-            <md:li type="{if (matches($match, "^\s*\d\.\s+")) then 'ol' else 'ul'}" indent="{string-length($spaces)}">
-            { md:task-list($config, replace($text/text(), "\n+$", "")) }
-            </md:li>
+            <markdown:li type="{if (matches($match, "^\s*\d\.\s+")) then 'ol' else 'ul'}" indent="{string-length($spaces)}">
+            { markdown:task-list($config, replace($text/text(), "\n+$", "")) }
+            </markdown:li>
     else
         ()
 };
 
-declare function md:task-list($config as map(*), $text as xs:string) {
+declare function markdown:task-list($config as map(*), $text as xs:string) {
     if (matches($text, "^\s*\[[xX ]\]")) then
         let $analyzed := analyze-string($text, "^\s*\[([xX ])\](.*)$")
         let $checked := $analyzed//fn:group[1]
@@ -392,12 +392,12 @@ declare function md:task-list($config as map(*), $text as xs:string) {
  : starting with a </. Contrary to original markdown, this parser supports markdown code
  : nested inside a HTML block.
  :)
-declare %private function md:html-block($block as xs:string, $config as map(*)) {
+declare %private function markdown:html-block($block as xs:string, $config as map(*)) {
     if (matches($block, "^\s*&lt;[^&gt;&lt;]+&gt;")) then
         let $block := util:parse-html($block)
         let $inner := ($block/HTML/BODY/node(), $block/HTML/HEAD/node())
         return
-            md:parse-html(if (exists($inner)) then $inner else $block, $config)
+            markdown:parse-html(if (exists($inner)) then $inner else $block, $config)
     else
         ()
 };
@@ -406,31 +406,31 @@ declare %private function md:html-block($block as xs:string, $config as map(*)) 
  : HTML blocks may contain nested markdown. This is not parsed immediately, but
  : marked with <markdown>text</markdown> for later processing.
  :)
-declare %private function md:parse-html($nodes as node()*, $config as map(*)) {
+declare %private function markdown:parse-html($nodes as node()*, $config as map(*)) {
     for $node in $nodes
     return
         typeswitch($node)
             case element() return
                 element { node-name($node) } {
                     $node/@*,
-                    md:parse-html($node/node(), $config)
+                    markdown:parse-html($node/node(), $config)
                 }
             default return
-                <md:markdown>{$node/string()}</md:markdown>
+                <markdown:markdown>{$node/string()}</markdown:markdown>
 };
 
-declare %private function md:link-definition($block as xs:string, $config as map(*)) {
+declare %private function markdown:link-definition($block as xs:string, $config as map(*)) {
     let $analyzed := analyze-string($block, '^\s*\[(.*?)\]:\s*(.*?)(?:\n*$|\s*"([^"]+)")\n*$')
     return
         if ($analyzed/fn:match) then
-            <md:link-target id="{$analyzed//fn:group[1]}" href="{$analyzed//fn:group[2]}">
+            <markdown:link-target id="{$analyzed//fn:group[1]}" href="{$analyzed//fn:group[2]}">
             { if ($analyzed//fn:group[3]) then attribute title { $analyzed//fn:group[3] } else () }
-            </md:link-target>
+            </markdown:link-target>
         else
             ()
 };
 
-declare %private function md:handle-block($block as xs:string, $handlers as function(*)*, $config as map(*)) {
+declare %private function markdown:handle-block($block as xs:string, $handlers as function(*)*, $config as map(*)) {
     if (empty($handlers)) then
         ()
     else
@@ -440,16 +440,16 @@ declare %private function md:handle-block($block as xs:string, $handlers as func
             if (exists($result)) then
                 $result
             else
-                md:handle-block($block, tail($handlers), $config)
+                markdown:handle-block($block, tail($handlers), $config)
 };
 
-declare %private function md:parse-blocks($splits as xs:string*, $config as map(*)) {
+declare %private function markdown:parse-blocks($splits as xs:string*, $config as map(*)) {
     for $block in $splits
     return
-        md:handle-block($block, $md:BLOCK_HANDLERS, $config)
+        markdown:handle-block($block, $markdown:BLOCK_HANDLERS, $config)
 };
 
-declare %private function md:inline($config as map(*), $nodes as node()*, $handler as function(*), $content as node()?) {
+declare %private function markdown:inline($config as map(*), $nodes as node()*, $handler as function(*), $content as node()?) {
     for $node in $nodes
     return
         typeswitch ($node)
@@ -458,63 +458,63 @@ declare %private function md:inline($config as map(*), $nodes as node()*, $handl
             case element() return
                 element { node-name($node) } {
                     $node/@*,
-                    md:inline($config, $node/node(), $handler, $content)
+                    markdown:inline($config, $node/node(), $handler, $content)
                 }
             default return
                 $handler($config, $node, $content)
 };
 
-declare %private function md:process-inlines($config as map(*), $spans as node()*, $handlers as function(*)*, $content as node()?) {
+declare %private function markdown:process-inlines($config as map(*), $spans as node()*, $handlers as function(*)*, $content as node()?) {
     if (empty($handlers)) then
         $spans
     else
         let $handler := head($handlers)
-        let $result := md:inline($config, $spans, $handler, $content)
+        let $result := markdown:inline($config, $spans, $handler, $content)
         return
-            md:process-inlines($config, $result, tail($handlers), $content)
+            markdown:process-inlines($config, $result, tail($handlers), $content)
 };
 
-declare %private function md:list-item($config as map(*), $item as element(md:li), $indent as xs:int) {
+declare %private function markdown:list-item($config as map(*), $item as element(markdown:li), $indent as xs:int) {
     if ($item/@indent = $indent) then
-        let $next := $item/following-sibling::*[1][self::md:li]
+        let $next := $item/following-sibling::*[1][self::markdown:li]
         return
             if ($next and $next/@indent > $indent) then (
                 $config?list-item((
                     $item/node(),
-                    $config?list($next/@type, md:list-item($config, $next, $next/@indent))
+                    $config?list($next/@type, markdown:list-item($config, $next, $next/@indent))
                 )),
-                for $next in $next/following-sibling::md:li[@indent = $indent][1]
-                    except $item/following-sibling::*[not(self::md:li)]/following-sibling::md:li
+                for $next in $next/following-sibling::markdown:li[@indent = $indent][1]
+                    except $item/following-sibling::*[not(self::markdown:li)]/following-sibling::markdown:li
                 return
-                    md:list-item($config, $next, $indent)
+                    markdown:list-item($config, $next, $indent)
             ) else (
                 $config?list-item($item/node()),
-                for $next in $next return md:list-item($config, $next, $indent)
+                for $next in $next return markdown:list-item($config, $next, $indent)
             )
     else
         ()
 };
 
-declare function md:cleanup($config as map(*), $nodes as node()*, $parent as node()?) {
+declare function markdown:cleanup($config as map(*), $nodes as node()*, $parent as node()?) {
     for $node in $nodes
     return
         typeswitch($node)
-            case element(md:li) return (
-                $config?list($node/@type, md:list-item($config, $node, $node/@indent)),
-                md:cleanup($config, $node/following-sibling::*[not(self::md:li)][1], $parent)
+            case element(markdown:li) return (
+                $config?list($node/@type, markdown:list-item($config, $node, $node/@indent)),
+                markdown:cleanup($config, $node/following-sibling::*[not(self::markdown:li)][1], $parent)
             )
-            case element(md:link-target) return
-                md:cleanup($config, $node/following-sibling::*[1], $parent)
-            case element(md:heading) return
+            case element(markdown:link-target) return
+                markdown:cleanup($config, $node/following-sibling::*[1], $parent)
+            case element(markdown:heading) return
                 if ($parent and $node/@level <= $parent/@level) then
                     ()
                 else (
                     $config?section((
                         $config?heading($node/@level, $node/node()),
-                        md:cleanup($config, $node/following-sibling::*[1], $node)
+                        markdown:cleanup($config, $node/following-sibling::*[1], $node)
                     )),
-                    md:cleanup($config, $node/following-sibling::md:heading[@level <= $node/@level][1], $parent)
+                    markdown:cleanup($config, $node/following-sibling::markdown:heading[@level <= $node/@level][1], $parent)
                 )
             default return
-                ($node, md:cleanup($config, $node/following-sibling::*[1], $parent))
+                ($node, markdown:cleanup($config, $node/following-sibling::*[1], $parent))
 };

@@ -2,8 +2,6 @@ xquery version "3.1";
 
 module namespace mdt="http://exist-db.org/xquery/markdown/tei";
 
-import module namespace md="http://exist-db.org/xquery/markdown" at "content/markdown.xql";
-
 declare namespace tei="http://www.tei-c.org/ns/1.0";
 
 declare default element namespace "http://www.tei-c.org/ns/1.0";

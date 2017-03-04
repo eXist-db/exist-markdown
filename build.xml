@@ -1,13 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project default="xar" name="markdown">
-    <xmlproperty file="expath-pkg.xml"/>
-    <property name="project.version" value="${package(version)}"/>
+    <property file="local.build.properties"/>
+    <property file="build.properties"/>
     <property name="project.app" value="markdown"/>
-    <property name="build.dir" value="build"/>
+    <property name="build" value="./build"/>
     <property name="server.url" value="http://demo.exist-db.org/exist/apps/public-repo/public/"/>
+    <target name="clean">
+        <delete failonerror="false">
+            <fileset dir="${build}">
+                <include name="*.xar"/>
+            </fileset>
+        </delete>
+        <delete file="expath-pkg.xml"/>
+    </target>
     <target name="xar">
-        <mkdir dir="${build.dir}"/>
-        <zip basedir="." destfile="${build.dir}/${project.app}-${project.version}.xar" excludes="${build.dir}/*"/>
+        <copy file="expath-pkg.xml.tmpl" tofile="expath-pkg.xml" filtering="true" overwrite="true">
+            <filterset>
+                <filter token="project.version" value="${project.version}"/>
+            </filterset>
+        </copy>
+        <mkdir dir="${build}"/>
+        <zip basedir="." destfile="${build}/${project.app}-${project.version}.xar" excludes="${build}/*"/>
     </target>
     <target name="upload">
         <input message="Enter password:" addproperty="server.pass" defaultvalue="">
@@ -15,7 +28,7 @@
         </input>
         <property name="xar" value="${project.app}-${project.version}.xar"/>
         <exec executable="curl">
-            <arg line="-T ${build.dir}/${xar} -u admin:${server.pass} ${server.url}/${xar}"/>
+            <arg line="-T ${build}/${xar} -u admin:${server.pass} ${server.url}/${xar}"/>
         </exec>
     </target>
 </project>
