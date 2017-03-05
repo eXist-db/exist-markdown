@@ -107,6 +107,11 @@ HTML block containing markdown:
 
 A <span style="color: red;">paragraph <span style="color: green;">containing</span></span> some <mark>inline</mark> <code>HTML</code>.
 
+# TEI output
+
+Besides producing HTML, the module can also transform [markdown into TEI](?mode=tei). To test, just append `?mode=tei`
+to the URL. Other output formats can be supported as well by adding a simple configuration, see [tei-config.xql](https://github.com/wolfgangmm/exist-markdown/blob/master/content/tei-config.xql).
+ 
 [1]: http://exist-db.org "eXist-db homepage"
 [2]: https://help.github.com/articles/github-flavored-markdown
 [3]: http://daringfireball.net/projects/markdown/syntax

@@ -96,7 +96,9 @@ let $inputDoc := util:binary-doc($local:app-root || "/" || $doc)
 let $input := util:binary-to-string($inputDoc)
 let $content := markdown:parse($input, $config)
 return
-    if ($mode = "tei") then
+    if ($mode = "tei") then (
+        util:declare-option("output:media-type", "application/xml"),
+        util:declare-option("output:method", "xml"),
         local:tei($content)
-    else
+    ) else
         local:html($content)
