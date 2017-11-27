@@ -48,7 +48,7 @@ declare variable $markdown:HTML-CONFIG := map {
     },
     "list-item": function($content) {
         <li>
-        { 
+        {
             $content
         }
         </li>
@@ -163,34 +163,40 @@ declare function markdown:recurse($nodes as node()*, $config as map(*)) {
 };
 
 declare %private function markdown:emphasis($config as map(*), $text as text(), $content as node()*) {
-    let $analyzed := analyze-string($text, "(?<!\\)[\*_]{1,2}([^\*_]+)(?<!\\)[\*_]{1,2}")
+    let $analyzed := analyze-string($text, "[\*_]{1,2}([^\*_]+)[\*_]{1,2}")
     for $token in $analyzed/*
     return
         typeswitch($token)
             case element(fn:match) return
-                if (matches($token, "^[\*_]{2}")) then
-                    $config?emphasis("strong", $token/fn:group/text())
+                if (ends-with($token/preceding-sibling::*[1], "\")) then
+                    $token//text()
                 else
-                    $config?emphasis("em", $token/fn:group/text())
+                    if (matches($token, "^[\*_]{2}")) then
+                        $config?emphasis("strong", $token/fn:group/text())
+                    else
+                        $config?emphasis("em", $token/fn:group/text())
             default return
                 $token/text()
 };
 
 declare function markdown:inline-html($config as map(*), $text as text(), $content as node()*) {
-    let $analyzed := analyze-string($text, "((?<!\\)&lt;.+?(&lt;/[^&gt;]+&gt;|&gt;/))")
+    let $analyzed := analyze-string($text, "(&lt;.+?(&lt;/[^&gt;]+&gt;|&gt;/))")
     for $token in $analyzed/*
     return
         typeswitch($token)
             case element(fn:match) return
-                let $html := util:parse-html($token/fn:group/string())
-                return
-                    ($html/HTML/BODY/node(), $html/HTML/HEAD/node(), $html)[1]
+                if (ends-with($token/preceding-sibling::*[1], "\")) then
+                    $token//text()
+                else
+                    let $html := util:parse-html($token/fn:group/string())
+                    return
+                        ($html/HTML/BODY/node(), $html/HTML/HEAD/node(), $html)[1]
             default return
                 $token/text()
 };
 
 declare function markdown:label($config as map(*), $text as text(), $content as node()*) {
-    let $analyzed := analyze-string($text, "\{(.*?)(?:\s*\:\s*(.*?))?\}")
+    let $analyzed := analyze-string($text, "\{(.*?)(?:\s*:\s*(.*?))?\}")
     for $token in $analyzed/*
     return
         typeswitch($token)
@@ -205,13 +211,13 @@ declare function markdown:label($config as map(*), $text as text(), $content as 
 
 
 declare %private function markdown:link($config as map(*), $text as text(), $content as node()*) {
-    let $analyzed := analyze-string($text, "(?<!\\)\[(.*?)?\]\s*([\[(])(.*?)[\])]")
+    let $analyzed := analyze-string($text, "\[(.*?)?\]\s*([\[(])(.*?)[\])]")
     return
         markdown:link-or-image($config, $analyzed, $content, $config?link)
 };
 
 declare %private function markdown:image($config as map(*), $text as text(), $content as node()*) {
-    let $analyzed := analyze-string($text, "(?<!\\)\!\[(.*?)?\]\s*([\[(])(.*?)[\])]")
+    let $analyzed := analyze-string($text, "!\[(.*?)?\]\s*([\[(])(.*?)[\])]")
     return
         markdown:link-or-image($config, $analyzed, $content, $config?image)
 };
@@ -222,42 +228,48 @@ declare %private function markdown:link-or-image($config as map(*), $analyzed as
     return
         typeswitch($token)
             case element(fn:match) return
-                let $groups := $token/fn:group
-                let $text := $groups[1]/text()
-                let $type := $groups[2]
-                let $link := $groups[3]
-                let $parts := analyze-string($link, '^(\S+)\s*"(.*?)"$')
-                let $link :=
-                    if ($parts//fn:group) then
-                        $parts//fn:group[1]
-                    else
-                        $link
-                let $title :=
-                    if ($parts/fn:match) then
-                        $parts//fn:group[2]
-                    else
-                        ()
-                return
-                    if ($type = "(") then
-                        $render($link, $title, $text)
-                    else
-                        let $def := $content//markdown:link-target[@id = $link/string()]
-                        return
-                            if ($def) then
-                                $render($def/@href, $def/@title, $text)
-                            else
-                                $render("#", (), "No link definition found for id " || $link/string())
+                if (ends-with($token/preceding-sibling::*[1], "\")) then
+                    $token//text()
+                else
+                    let $groups := $token/fn:group
+                    let $text := $groups[1]/text()
+                    let $type := $groups[2]
+                    let $link := $groups[3]
+                    let $parts := analyze-string($link, '^(\S+)\s*"(.*?)"$')
+                    let $link :=
+                        if ($parts//fn:group) then
+                            $parts//fn:group[1]
+                        else
+                            $link
+                    let $title :=
+                        if ($parts/fn:match) then
+                            $parts//fn:group[2]
+                        else
+                            ()
+                    return
+                        if ($type = "(") then
+                            $render($link, $title, $text)
+                        else
+                            let $def := $content//markdown:link-target[@id = $link/string()]
+                            return
+                                if ($def) then
+                                    $render($def/@href, $def/@title, $text)
+                                else
+                                    $render("#", (), "No link definition found for id " || $link/string())
             default return
                 $token/text()
 };
 
 declare %private function markdown:inline-code($config as map(*), $text as text(), $content as node()) {
-    let $analyzed := analyze-string($text, "(?<!\\)`([^`]+)(?<!\\)`|(?<!\\)``(.*?)(?<!\\)``")
+    let $analyzed := analyze-string($text, "`([^`]+)`|``(.*?)``")
     for $token in $analyzed/*
     return
         typeswitch($token)
             case element(fn:match) return
-                $config?code($token/fn:group[1]/text())
+                if (ends-with($token/preceding-sibling::*[1], "\")) then
+                    $token//text()
+                else
+                    $config?code($token/fn:group[1]/text())
             default return
                 $token/text()
 };
@@ -365,8 +377,8 @@ declare %private function markdown:list($block as xs:string, $config as map(*)) 
         let $analyzed := analyze-string($block, "^\s*(?:[\*\+\-]|\d\.)\s*", "ms")
         for $match in $analyzed/fn:match
         let $spaces := replace(replace($match, "^\s*\n", ""), "^(\s*?)\S.*$", "$1")
-        let $text := 
-            ($match/following-sibling::fn:non-match except 
+        let $text :=
+            ($match/following-sibling::fn:non-match except
                 $match/following-sibling::fn:match/following-sibling::fn:non-match)
         return
             <markdown:li type="{if (matches($match, "^\s*\d\.\s+")) then 'ol' else 'ul'}" indent="{string-length($spaces)}">
