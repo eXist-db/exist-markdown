@@ -8,8 +8,6 @@
     <copyright>true</copyright>
     <type>application</type>
     <target>markdown</target>
-    <prepare>pre-install.xql</prepare>
-    <finish/>
     <changelog>
         <change version="0.5">
             <ul xmlns="http://www.w3.org/1999/xhtml">
