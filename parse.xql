@@ -34,7 +34,6 @@ declare function local:html($content) {
     <html>
         <head>
             <title>Markdown Parser Test</title>
-            <link rel="stylesheet" type="text/css" href="$shared/resources/css/bootstrap-3.0.3.min.css"/>
             <style type="text/css">
                 td.left {{ text-align: left; }}
                 td.right {{ text-align: right; }}
@@ -43,21 +42,6 @@ declare function local:html($content) {
         </head>
         <body class="container">
             { $content }
-            <script type="text/javascript" src="$shared/resources/scripts/jquery/jquery-1.7.1.min.js"/>
-            <script type="text/javascript" src="$shared/resources/scripts/ace/ace.js"/>
-            <script type="text/javascript" src="$shared/resources/scripts/ace/mode-javascript.js"/>
-            <script type="text/javascript" src="$shared/resources/scripts/ace/mode-text.js"/>
-            <script type="text/javascript" src="$shared/resources/scripts/ace/mode-xquery.js"/>
-            <script type="text/javascript" src="$shared/resources/scripts/ace/mode-java.js"/>
-            <script type="text/javascript" src="$shared/resources/scripts/ace/mode-css.js"/>
-            <script type="text/javascript" src="$shared/resources/scripts/ace/mode-xml.js"/>
-            <script type="text/javascript" src="$shared/resources/scripts/ace/theme-clouds.js"/>
-            <script type="text/javascript" src="$shared/resources/scripts/highlight.js"/>
-            <script type="text/javascript">
-                $(document).ready(function() {{
-                    $(".code").highlight({{theme: "clouds"}});
-                }});
-            </script>
         </body>
     </html>
 };
