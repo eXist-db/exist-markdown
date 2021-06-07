@@ -24,11 +24,6 @@ else if (ends-with($exist:resource, ".md")) then
             <add-parameter name="doc" value="{$exist:resource}"/>
         </forward>
     </dispatch>
-    
-else if (contains($exist:path, "/$shared/")) then
-    <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
-        <forward url="/shared-resources/{substring-after($exist:path, '/$shared/')}"/>
-    </dispatch>
 
 else
     <ignore xmlns="http://exist.sourceforge.net/NS/exist">
