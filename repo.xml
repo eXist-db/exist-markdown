@@ -9,6 +9,17 @@
     <type>application</type>
     <target>markdown</target>
     <changelog>
+        <change version="0.7.0">
+            <ul xmlns="http://www.w3.org/1999/xhtml">
+                <li>Remove shared-resources dependency - <a href="https://github.com/eXist-db/exist-markdown/pull/7">#7</a></li>
+            </ul>
+        </change>
+        <change version="0.6">
+            <ul xmlns="http://www.w3.org/1999/xhtml">
+                <li>Update regex to match spec - <a href="https://github.com/eXist-db/exist-markdown/commit/7c30b80df9508b6c64a2758fc42358be0c72013d">7c30b80</a></li>
+                <li>Add link to TEI version to bottom of test.md - <a href="https://github.com/eXist-db/exist-markdown/commit/abf4b36288f28a35dd10480163a975a5ddff30dc">abf4b36</a></li>
+            </ul>
+        </change>
         <change version="0.5">
             <ul xmlns="http://www.w3.org/1999/xhtml">
                 <li>Add TEI output alongside original HTML output</li>
