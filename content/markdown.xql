@@ -134,7 +134,7 @@ declare function markdown:parse($input as xs:string?) {
 
 declare function markdown:parse($input as xs:string?, $configs as map(*)+) {
     let $config := map:merge($configs)
-	let $split := analyze-string(replace($input || "&#10;", "\t", "    "), $markdown:RE_SPLIT_BLOCKS, "sm")
+	let $split := analyze-string(replace($input || "&#10;", "\t", "    "), $markdown:RE_SPLIT_BLOCKS, "m")
     let $blocks := <wrapper>{markdown:parse-blocks($split/fn:match/fn:group[1]/text(), $config)}</wrapper>
     let $cleaned := markdown:cleanup($config, $blocks/*[1], ())
     let $output := markdown:process-inlines($config, $cleaned, $markdown:SPAN_HANDLERS, $blocks)
@@ -293,7 +293,7 @@ declare %private function markdown:heading($block as xs:string, $config as map(*
     else if (matches($block, "\n*\-\-+$")) then
         $config("heading")(2, replace($block, "^(.*)\s*\-+", "$1"))
     else if (matches($block, "^\s*#{1,6}")) then
-        let $level := replace($block, "^\s*(#+).*", "$1")
+        let $level := replace($block, "^\s*(#+).*", "$1", "m")
         return
             <markdown:heading level="{string-length($level)}">{ replace($block, "^\s*#{1,6}\s*(.*)$", "$1")}</markdown:heading>
     else
