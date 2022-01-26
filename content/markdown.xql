@@ -180,7 +180,7 @@ declare %private function markdown:emphasis($config as map(*), $text as text(), 
 };
 
 declare function markdown:inline-html($config as map(*), $text as text(), $content as node()*) {
-    let $analyzed := analyze-string($text, "(&lt;.+?(&lt;/[^&gt;]+&gt;|&gt;/))")
+    let $analyzed := analyze-string($text, "(&lt;.+?(&lt;/[^&gt;]+&gt;|&gt;/))", "s")
     for $token in $analyzed/*
     return
         typeswitch($token)
