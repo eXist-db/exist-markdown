@@ -4,7 +4,7 @@
     <property file="build.properties"/>
     <property name="project.app" value="markdown"/>
     <property name="build.dir" value="build"/>
-    <property name="server.url" value="http://demo.exist-db.org/exist/apps/public-repo/public/"/>
+    <property name="server.url" value="https://exist-db.org/exist/apps/public-repo/public/"/>
     <target name="clean">
         <delete failonerror="false">
             <fileset dir="${build.dir}">
