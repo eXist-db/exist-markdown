@@ -12,7 +12,8 @@
         <change version="0.7.1">
             <ul xmlns="http://www.w3.org/1999/xhtml">
                 <li>Fix problem with parsing of inline strong - <a href="https://github.com/eXist-db/exist-markdown/pull/11">#11</a></li>
-                <li>Fix problem with block parsing - <a href="https://github.com/eXist-db/exist-markdown/pull/12">#12</a></li>
+                <li>Fix problem with block parsing- <a href="https://github.com/eXist-db/exist-markdown/pull/12">#12</a></li>
+                <li>Note: The fix in #12 requires eXist 5.3.0 or higher; for earlier versions, v0.7.1 is not necessary.</li>
             </ul>
         </change>
         <change version="0.7.0">
