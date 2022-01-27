@@ -3,7 +3,7 @@
     <property file="local.build.properties"/>
     <property file="build.properties"/>
     <property name="project.app" value="markdown"/>
-    <property name="build" value="./build"/>
+    <property name="build" value="build"/>
     <property name="server.url" value="http://demo.exist-db.org/exist/apps/public-repo/public/"/>
     <target name="clean">
         <delete failonerror="false">
