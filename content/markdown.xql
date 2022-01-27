@@ -373,7 +373,7 @@ declare function markdown:table-col-class($spec as xs:string?) {
 };
 
 declare %private function markdown:list($block as xs:string, $config as map(*)) {
-    if (matches($block, "^\s*([\*\+\-]|\d\.\s+\S)")) then
+    if (matches($block, "^\s*([+\-]|\*[^*]|\d\.\s+\S)")) then
         let $analyzed := analyze-string($block, "^\s*(?:[\*\+\-]|\d\.)\s*", "ms")
         for $match in $analyzed/fn:match
         let $spaces := replace(replace($match, "^\s*\n", ""), "^(\s*?)\S.*$", "$1")
