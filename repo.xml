@@ -11,6 +11,7 @@
     <changelog>
         <change version="0.7.1">
             <ul xmlns="http://www.w3.org/1999/xhtml">
+                <li>Fix problem with parsing of inline strong - <a href="https://github.com/eXist-db/exist-markdown/pull/11">#11</a></li>
                 <li>Fix problem with block parsing - <a href="https://github.com/eXist-db/exist-markdown/pull/12">#12</a></li>
             </ul>
         </change>
