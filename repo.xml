@@ -9,6 +9,11 @@
     <type>application</type>
     <target>markdown</target>
     <changelog>
+        <change version="0.7.1">
+            <ul xmlns="http://www.w3.org/1999/xhtml">
+                <li>Fix problem with block parsing - <a href="https://github.com/eXist-db/exist-markdown/pull/12">#12</a></li>
+            </ul>
+        </change>
         <change version="0.7.0">
             <ul xmlns="http://www.w3.org/1999/xhtml">
                 <li>Remove shared-resources dependency - <a href="https://github.com/eXist-db/exist-markdown/pull/7">#7</a></li>
