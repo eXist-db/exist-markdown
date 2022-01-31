@@ -301,8 +301,8 @@ declare %private function markdown:heading($block as xs:string, $config as map(*
 };
 
 declare %private function markdown:code($block as xs:string, $config as map(*)) {
-    if (matches($block, "^`{3,}.*\n.*?`{3,}$", "ms")) then
-        let $tokens := analyze-string($block, "^`{3,}(.*?)\n(.*)`{3,}$", "ms")
+    if (matches($block, "^`{3,}.*\n.*?`{3,}", "m")) then
+        let $tokens := analyze-string($block, "^`{3,}(.*?)\n(.*)`{3,}", "m")
         let $lang := $tokens//fn:group[1]
         let $code := $tokens//fn:group[2]
         return
