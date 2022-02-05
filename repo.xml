@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <meta xmlns="http://exist-db.org/xquery/repo">
-    <description>A markdown parser written in XQuery.</description>
+    <description>Markdown Parser in XQuery</description>
     <author>Wolfgang Meier</author>
-    <website>https://github.com/wolfgangmm/exist-markdown</website>
+    <website>https://github.com/eXist-db/exist-markdown</website>
     <status>beta</status>
     <license>GNU-LGPL</license>
     <copyright>true</copyright>
-    <type>application</type>
-    <target>markdown</target>
+    <type>library</type>
     <changelog>
+        <change version="1.0.0">
+            <ul xmlns="http://www.w3.org/1999/xhtml">
+                <li>Use generator-exist to regenerate package scaffolding, with tests, CI, etc.</li>
+                <li>Switch package type from app to library</li>
+            </ul>
+        </change>
         <change version="0.7.1">
             <ul xmlns="http://www.w3.org/1999/xhtml">
                 <li>Fix problem with parsing of inline strong - <a href="https://github.com/eXist-db/exist-markdown/pull/11">#11</a></li>

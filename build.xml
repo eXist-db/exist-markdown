@@ -1,34 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project default="xar" name="markdown">
-    <property file="local.build.properties"/>
-    <property file="build.properties"/>
+<project default="all" name="markdown">
+    <description>Markdown Parser in XQuery</description>
+    <xmlproperty file="expath-pkg.xml"/>
+    <property name="project.version" value="${package(version)}"/>
     <property name="project.app" value="markdown"/>
     <property name="build.dir" value="build"/>
-    <property name="server.url" value="https://exist-db.org/exist/apps/public-repo/public/"/>
-    <target name="clean">
-        <delete failonerror="false">
-            <fileset dir="${build.dir}">
-                <include name="*.xar"/>
-            </fileset>
-        </delete>
-        <delete file="expath-pkg.xml"/>
-    </target>
-    <target name="xar">
-        <copy file="expath-pkg.xml.tmpl" tofile="expath-pkg.xml" filtering="true" overwrite="true">
-            <filterset>
-                <filter token="project.version" value="${project.version}"/>
-            </filterset>
-        </copy>
+    <!-- Start it -->
+    <target name="init" description="create build directory">
+        <tstamp/>
         <mkdir dir="${build.dir}"/>
-        <zip basedir="." destfile="${build.dir}/${project.app}-${project.version}.xar" excludes="${build.dir}/*"/>
     </target>
-    <target name="upload">
-        <input message="Enter password:" addproperty="server.pass" defaultvalue="">
-            <handler type="secure"/>
-        </input>
-        <property name="xar" value="${project.app}-${project.version}.xar"/>
-        <exec executable="curl">
-            <arg line="-T ${build.dir}/${xar} -u admin:${server.pass} ${server.url}/${xar}"/>
-        </exec>
+    <!-- Dev build (includes everything unoptimized) -->
+    <target name="dev" depends="init" description="compile all source files">
+        <zip basedir="." destfile="${build.dir}/${project.app}-${project.version}-dev.xar"
+            excludes="**/${build.dir}/**, **/node_modules/**"/>
+    </target>
+    <!-- Release build -->
+    <target name="deploy" depends="init" description="compile release build">
+        <zip basedir="." destfile="${build.dir}/${project.app}-${project.version}.xar"
+            excludes="**/${build.dir}/**, .existdb.json, .yo-rc.json, **/node_modules/**, **/reports/**, README.md, **/.git*/** "
+        />
+    </target>
+    <target name="all" depends="dev, deploy">
+        <tstamp/>
     </target>
 </project>

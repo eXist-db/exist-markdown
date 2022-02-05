@@ -45,11 +45,11 @@ backticks to allow one backtick inside: `` `ls` ``.
 
 Links can be specified directly or by reference.
 
-This [link][1] references a link definition given at the end of the document ! And here's a direct link to the eXist [documentation](http://exist-db.org/exist/apps/docs "eXist-db Documentation").
+This [link][1] references a link definition given at the end of the document ! And here's a direct link to the eXist [documentation](https://exist-db.org/exist/apps/docs "eXist-db Documentation").
 
 ## Images
 
-![eXist-db Logo](http://exist-db.org/exist/apps/homepage/resources/img/existdb.gif "Our Logo")
+![eXist-db Logo](https://exist-db.org/exist/apps/homepage/resources/img/existdb.gif "Our Logo")
 
 Image linked through reference: ![Read more][glasses].
 
@@ -80,14 +80,14 @@ simple table | column1 | column2
 
 ```xml
 <figure>
-    <img src="http://exist-db.org/exist/apps/homepage/resources/img/existdb.gif"/>
+    <img src="https://exist-db.org/exist/apps/homepage/resources/img/existdb.gif"/>
 </figure>
 ```
 
 is rendered as:
 
 <figure>
-    <img src="http://exist-db.org/exist/apps/homepage/resources/img/existdb.gif"/>
+    <img src="https://exist-db.org/exist/apps/homepage/resources/img/existdb.gif"/>
 </figure>
 
 HTML block containing markdown:
@@ -110,9 +110,9 @@ A <span style="color: red;">paragraph <span style="color: green;">containing</sp
 # TEI output
 
 Besides producing HTML, the module can also transform [markdown into TEI](?mode=tei). To test, just append `?mode=tei`
-to the URL. Other output formats can be supported as well by adding a simple configuration, see [tei-config.xql](https://github.com/wolfgangmm/exist-markdown/blob/master/content/tei-config.xql).
+to the URL. Other output formats can be supported as well by adding a simple configuration, see [tei-config.xql](https://github.com/eXist-db/exist-markdown/blob/master/content/tei-config.xqm).
  
-[1]: http://exist-db.org "eXist-db homepage"
+[1]: https://exist-db.org "eXist-db homepage"
 [2]: https://help.github.com/articles/github-flavored-markdown
 [3]: http://daringfireball.net/projects/markdown/syntax
-[glasses]: http://exist-db.org/exist/apps/homepage/resources/img/book-cover.gif "Documentation"
+[glasses]: https://exist-db.org/exist/apps/homepage/resources/img/book-cover.gif "Documentation"
