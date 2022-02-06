@@ -3,7 +3,6 @@
 [![License][license-img]][license-url]
 [![GitHub release][release-img]][release-url]
 ![exist-db CI](https://github.com/eXist-db/exist-markdown/workflows/exist-db%20CI/badge.svg)
-[![Coverage percentage][coveralls-image]][coveralls-url]
 
 <img src="icon.png" align="left" width="25%"/>
 
@@ -107,5 +106,3 @@ GNU-LGPL © [The eXist-db Authors](https://github.com/eXist-db/exist-markdown)
 [license-url]: https://www.gnu.org/licenses/lgpl-3.0
 [release-img]: https://img.shields.io/badge/release-1.0.0-green.svg
 [release-url]: https://github.com/eXist-db/exist-markdown/releases/latest
-[coveralls-image]: https://coveralls.io/repos/eXist-db/exist-markdown/badge.svg
-[coveralls-url]: https://coveralls.io/r/eXist-db/markdown
