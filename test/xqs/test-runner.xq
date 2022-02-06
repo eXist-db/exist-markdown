@@ -2,7 +2,7 @@ xquery version "3.1";
 
 (:~ This library runs the XQSuite unit tests for the markdown app.
  :
- : @author The eXist-db Authors
+ : @author eXist-db Project
  : @version 1.0.0
  : @see http://www.exist-db.org/exist/apps/doc/xqsuite
  :)

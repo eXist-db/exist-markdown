@@ -20,14 +20,11 @@ blocks and tables. These are additional features found in [Github flavored markd
 
 *   [exist-db](https://exist-db.org/exist/apps/homepage/index.html) version: `5.x` or greater
 
-*   [ant](https://ant.apache.org) version: `1.10.7` \(for building from source\)
-
 *   [node](https://nodejs.org) version: `12.x` \(for building from source\)
-    
 
 ## Installation
 
-1.  Download  the `markdown-1.0.0.xar` file from GitHub [releases](https://github.com/eXist-db/exist-markdown/releases) page.
+1.  Install the Markdown package from eXist's package repository via the [dashboard](http://localhost:8080/exist/apps/dashboard/index.html), or download  the `markdown-1.0.0.xar` file from GitHub [releases](https://github.com/eXist-db/exist-markdown/releases) page.
 
 2.  Open the [dashboard](http://localhost:8080/exist/apps/dashboard/index.html) of your eXist-db instance and click on `package manager`.
 
@@ -38,61 +35,37 @@ blocks and tables. These are additional features found in [Github flavored markd
 ### Building from source
 
 1.  Download, fork or clone this GitHub repository
-2.  There are two default build targets in `build.xml`:
-    *   `dev` including *all* files from the source folder including those with potentially sensitive information.
-  
-    *   `deploy` is the official release. It excludes files necessary for development but that have no effect upon deployment.
-  
-3.  Calling `ant`in your CLI will build both files:
-  
-```bash
-cd exist-markdown
-ant
+2.  Calling `npm start` in your CLI will install required dependencies from npm and create a `.xar`:
+ 
+```bash   
+cd templating
+npm start
 ```
 
-   1. to only build a specific target call either `dev` or `deploy` like this:
-   ```bash   
-   ant dev
-   ```   
-
-If you see `BUILD SUCCESSFUL` ant has generated a `markdown-1.0.0.xar` file in the `build/` folder. To install it, follow the instructions [above](#installation).
+To install it, follow the instructions [above](#installation).
 
 
 
 ## Running Tests
+
+This app uses [mochajs](https://mochajs.org) as a test-runner. To run the tests type:
+
+```bash
+npm test
+```
+
+This will automatically build and install the library plus a test application into your local eXist, assuming it can be reached on `http://localhost:8080/exist`. If this is not the case, edit `.existdb.json` and change the properties for the `localhost` server to match your setup.
 
 To run tests locally your app needs to be installed in a running exist-db instance at the default port `8080` and with the default dba user `admin` with the default empty password.
 
 A quick way to set this up for docker users is to simply issue:
 
 ```bash
-docker run -dit -p 8080:8080 existdb/existdb:release
-```
-
-After you finished installing the application, you can run the full testsuite locally.
-
-### Unit-tests
-
-This app uses [mochajs](https://mochajs.org) as a test-runner. To run both xquery and javascript unit-tests type:
-
-```bash
+docker create --name exist-ci -p 8080:8080 existdb/existdb:latest
+docker cp ./markdown-*.xar exist-ci:exist/autodeploy
+docker start exist-ci && sleep 30
 npm test
 ```
-
-### Integration-tests
-
-This app uses [cypress](https://www.cypress.io) for integration tests, just type:
-
-```bash
-npm run cypress
-```
-
-Alternatively, use npx:
-
-```bash
-npx cypress open
-```
-
 
 ## Contributing
 

@@ -12,25 +12,36 @@
     "markdown",
     "md"
   ],
+  "devDependencies": {
+    "@existdb/gulp-exist": "4.0.0",
+	"@existdb/gulp-replace-tmpl": "^1.0.0",
+	"axios": "^0.21.1",
+	"chai": "^4.2.0",
+	"chai-xml": "^0.4.0",
+	"delete": "^1.1.0",
+	"fs-extra": "^9.1.0",
+	"gulp": "^4.0.2",
+	"gulp-rename": "^2.0.0",
+	"gulp-zip": "^5.0.2",
+	"jsdom": "^16.4.0",
+	"mocha": "^8.2.1",
+	"xmldoc": "^1.1.2",
+	"yeoman-assert": "^3.1.1"
+  },
   "author": {
     "name": "The eXist-db Authors"
   },
   "license": "GNU-LGPL",
   "scripts": {
-    "test": "mocha test/mocha/ --recursive --exit && mocha test/xqs/*.js"
+    "start": "npm install && npm run build",
+	"test": "gulp install:all && mocha test/mocha --recursive --exit && mocha test/xqs/*.js",
+	"test:watch": "mocha test/mocha --recursive --watch",
+	"build": "gulp build",
+	"build:all": "gulp build:all"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/eXist-db/exist-markdown",
     "license": "GNU-LGPL"
-  },
-  "devDependencies": {
-    "chai": "^4.3.6",
-    "chai-xml": "^0.4.0",
-    "fs-extra": "^10.0.0",
-    "mocha": "^9.2.0",
-    "supertest": "^6.2.2",
-    "xmldoc": "^1.1.2",
-    "yeoman-assert": "^3.1.1"
   }
 }
