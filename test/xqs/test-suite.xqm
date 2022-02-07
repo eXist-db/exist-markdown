@@ -21,6 +21,38 @@ declare
 };
 
 declare
+    %test:name('Paragraphs are separated from following blocks by a blank line')
+    %test:assertTrue
+    function tests:paragraph-delimiters() {
+        let $markdown := ``[Paragraphs are separated from following blocks by a blank line. 
+A single line break does **not** start a new paragraph.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur nec lobortis magna. Fusce vestibulum felis a eros suscipit mattis. Pellentesque sit amet enim libero. Sed sed tempus nibh. Ut pellentesque quam ac bibendum iaculis. Suspendisse **vitae** interdum risus, convallis auctor urna. Mauris vel sapien ut sapien mollis rhoncus non a nibh. Nullam vulputate consequat purus, ut varius justo ornare vel. Etiam ornare diam at velit varius volutpat. Mauris vel luctus mi, at fermentum purus. *Vestibulum ante ipsum* primis in faucibus orci luctus et ultrices posuere cubilia Curae; Cras lobortis est dolor, et tristique lorem egestas vitae. Sed feugiat dictum nunc. Nullam ultricies vehicula aliquam. Cras felis ante, ultrices sed lacinia et, pharetra in tellus. Vivamus scelerisque ut mi a dapibus.]``
+        return
+            count(markdown:parse($markdown)/p) eq 2
+};
+
+declare
+    %test:name('Format inline code snippets with a pair of backticks')
+    %test:assertTrue
+    function tests:inline-code() {
+        let $markdown := ``[To format inline code snippets, surround them with a single backtick: `request:get-parameter()`.]``
+        return
+            count(markdown:parse($markdown)/p/code) eq 1
+};
+
+declare
+    %test:name('Use two 
+backticks to allow one backtick inside')
+    %test:assertEquals(' `ls` ')
+    function tests:inline-code-escape-backticks() {
+        let $markdown := ``[Use two 
+backticks to allow one backtick inside: `` `ls` ``.]``
+        return
+            markdown:parse($markdown)/p/code/string()
+};
+
+declare
     %test:name('Simple lists are rendered correctly')
     %test:assertTrue
     function tests:lists-asterisk() {
@@ -30,6 +62,52 @@ declare
 ]``
         return
             count(markdown:parse($markdown)/ul/li) eq 3
+};
+
+declare
+    %test:name('Nested list')
+    %test:assertTrue
+    function tests:nested-list() {
+        let $markdown := ``[1. One
+2. Two
+    * A nested list item
+    * in an unordered list.
+3. Four
+]``
+        let $parsed := markdown:parse($markdown)
+        let $expected := 
+        <body>
+            <ol>
+                            <li>One</li>
+                            <li>Two<ul>
+                                    <li>A nested list item</li>
+                                    <li>in an unordered list.</li>
+                                </ul>
+                            </li>
+                            <li>Four</li>
+                        </ol>
+                        </body>
+        return
+            deep-equal($parsed, $expected)
+};
+
+declare
+    %test:name('Tasks list')
+    %test:assertTrue
+function tests:tasks-list() {
+    let $markdown := ``[* [x] write documentation
+* [ ] create tests
+]``
+    let $parsed := markdown:parse($markdown)
+    let $expected := 
+        <body>
+            <ul>
+                <li><label class="checkbox-inline"><input type="checkbox" value="" checked="checked"/> write documentation</label></li>
+                <li><label class="checkbox-inline"><input type="checkbox" value=""/> create tests</label></li>
+            </ul>
+        </body>
+    return
+        deep-equal($parsed, $expected)
 };
 
 declare
@@ -164,52 +242,6 @@ simple table | column1 | column2
             deep-equal($parsed, $expected)
 };
 
-declare
-    %test:name('Nested list')
-    %test:assertTrue
-    function tests:nested-list() {
-        let $markdown := ``[1. One
-2. Two
-    * A nested list item
-    * in an unordered list.
-3. Four
-]``
-        let $parsed := markdown:parse($markdown)
-        let $expected := 
-        <body>
-            <ol>
-                            <li>One</li>
-                            <li>Two<ul>
-                                    <li>A nested list item</li>
-                                    <li>in an unordered list.</li>
-                                </ul>
-                            </li>
-                            <li>Four</li>
-                        </ol>
-                        </body>
-        return
-            deep-equal($parsed, $expected)
-};
-
-declare
-    %test:name('Tasks list')
-    %test:assertTrue
-function tests:tasks-list() {
-    let $markdown := ``[* [x] write documentation
-* [ ] create tests
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected := 
-        <body>
-            <ul>
-                <li><label class="checkbox-inline"><input type="checkbox" value="" checked="checked"/> write documentation</label></li>
-                <li><label class="checkbox-inline"><input type="checkbox" value=""/> create tests</label></li>
-            </ul>
-        </body>
-    return
-        deep-equal($parsed, $expected)
-};
-
 
 declare
     %test:name('HTML blocks')
@@ -267,37 +299,4 @@ declare
         </span> some <mark>inline</mark> <code>HTML</code>.</p></body>
         return
             deep-equal($parsed, $expected)
-};
-
-
-declare
-    %test:name('Paragraphs are separated from following blocks by a blank line')
-    %test:assertTrue
-    function tests:paragraph-delimiters() {
-        let $markdown := ``[Paragraphs are separated from following blocks by a blank line. 
-A single line break does **not** start a new paragraph.
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur nec lobortis magna. Fusce vestibulum felis a eros suscipit mattis. Pellentesque sit amet enim libero. Sed sed tempus nibh. Ut pellentesque quam ac bibendum iaculis. Suspendisse **vitae** interdum risus, convallis auctor urna. Mauris vel sapien ut sapien mollis rhoncus non a nibh. Nullam vulputate consequat purus, ut varius justo ornare vel. Etiam ornare diam at velit varius volutpat. Mauris vel luctus mi, at fermentum purus. *Vestibulum ante ipsum* primis in faucibus orci luctus et ultrices posuere cubilia Curae; Cras lobortis est dolor, et tristique lorem egestas vitae. Sed feugiat dictum nunc. Nullam ultricies vehicula aliquam. Cras felis ante, ultrices sed lacinia et, pharetra in tellus. Vivamus scelerisque ut mi a dapibus.]``
-        return
-            count(markdown:parse($markdown)/p) eq 2
-};
-
-declare
-    %test:name('Format inline code snippets with a pair of backticks')
-    %test:assertTrue
-    function tests:inline-code() {
-        let $markdown := ``[To format inline code snippets, surround them with a single backtick: `request:get-parameter()`.]``
-        return
-            count(markdown:parse($markdown)/p/code) eq 1
-};
-
-declare
-    %test:name('Use two 
-backticks to allow one backtick inside')
-    %test:assertEquals(' `ls` ')
-    function tests:inline-code-escape-backticks() {
-        let $markdown := ``[Use two 
-backticks to allow one backtick inside: `` `ls` ``.]``
-        return
-            markdown:parse($markdown)/p/code/string()
 };
