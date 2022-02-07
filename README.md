@@ -38,7 +38,7 @@ blocks and tables. These are additional features found in [Github flavored markd
 2.  Calling `npm start` in your CLI will install required dependencies from npm and create a `.xar`:
  
 ```bash   
-cd templating
+cd exist-markdown
 npm start
 ```
 
@@ -54,7 +54,7 @@ This app uses [mochajs](https://mochajs.org) as a test-runner. To run the tests 
 npm test
 ```
 
-This will automatically build and install the library plus a test application into your local eXist, assuming it can be reached on `http://localhost:8080/exist`. If this is not the case, edit `.existdb.json` and change the properties for the `localhost` server to match your setup.
+This will automatically build and install the library into your local eXist, assuming it can be reached on `http://localhost:8080/exist`. If this is not the case, edit `.existdb.json` and change the properties for the `localhost` server to match your setup.
 
 To run tests locally your app needs to be installed in a running exist-db instance at the default port `8080` and with the default dba user `admin` with the default empty password.
 

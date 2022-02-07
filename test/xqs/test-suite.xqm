@@ -42,8 +42,7 @@ declare
 };
 
 declare
-    %test:name('Use two 
-backticks to allow one backtick inside')
+    %test:name('Use two backticks to allow one backtick inside')
     %test:assertEquals(' `ls` ')
     function tests:inline-code-escape-backticks() {
         let $markdown := ``[Use two 
