@@ -13,13 +13,6 @@ import module namespace markdown="http://exist-db.org/xquery/markdown";
 
 declare namespace test="http://exist-db.org/xquery/xqsuite";
 
-declare
-    %test:name('one-is-one')
-    %test:assertTrue
-function tests:tautology() {
-    1 = 1
-};
-
 (:============:)
 (: Paragraphs :)
 (:============:)
