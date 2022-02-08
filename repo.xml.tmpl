@@ -10,15 +10,17 @@
     <changelog>
         <change version="1.0.0">
             <ul xmlns="http://www.w3.org/1999/xhtml">
+                <li>Breaking change: Switch package type from app to library. Apps that relied on
+                    the application package's /exist/apps/markdown/PATH_TO_MD.md (via the parse.xql
+                    main module will not work.</li>
                 <li>Use generator-exist to regenerate package scaffolding, with tests, CI, etc.</li>
-                <li>Switch package type from app to library</li>
             </ul>
         </change>
         <change version="0.7.1">
             <ul xmlns="http://www.w3.org/1999/xhtml">
                 <li>Fix problem with parsing of inline strong - <a href="https://github.com/eXist-db/exist-markdown/pull/11">#11</a></li>
                 <li>Fix problem with block parsing- <a href="https://github.com/eXist-db/exist-markdown/pull/12">#12</a></li>
-                <li>Note: The fix in #12 requires eXist 5.3.0 or higher; for earlier versions, v0.7.1 is not necessary.</li>
+                <li>Note: The fix in #12 was required for users of eXist 5.3.0 or higher, and so it is now the minimum required version.</li>
             </ul>
         </change>
         <change version="0.7.0">
