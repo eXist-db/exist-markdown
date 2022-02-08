@@ -274,7 +274,7 @@ simple table | column1 | column2
 declare
     %test:name('HTML blocks containing markdown')
     %test:assertTrue
-    %test:pending('We need a precise expected output')
+    %test:pending('Extra body elements are inserted into the divs; div structure is mangled')
 function tests:html-block-containing-markdown() {
     let $markdown := ``[<div class="row">
     <div class="col-md-6">
@@ -288,7 +288,18 @@ function tests:html-block-containing-markdown() {
 </div>
 ]``
     let $parsed := markdown:parse($markdown)
-    let $expected := <!-- I'not sure what is exactly expected here [LG] -->
+    let $expected := 
+        <body>
+            <div class="row">
+                <div class="col-md-6">
+                    <p>First column in <strong>two column layout</strong>.</p>
+                    <p>Second paragraph.</p>
+                </div>
+                <div class="col-md-6">
+                    <p>Second column in two column layout.</p>
+                </div>
+            </div>
+        </body>
     return
         deep-equal($parsed, $expected)
 };
