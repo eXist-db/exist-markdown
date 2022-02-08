@@ -303,7 +303,7 @@ simple table | column1 | column2
 (:=============:)
 
 declare
-    %test:name('HTML blocks containing markdown')
+    %test:name('HTML block containing markdown')
     %test:assertTrue
     %test:pending('Extra body elements are inserted into the divs; div structure is mangled')
 function tests:html-block-containing-markdown() {
