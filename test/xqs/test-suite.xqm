@@ -140,11 +140,13 @@ declare
 function tests:links() {
     let $markdown := ``[
 This [link][1] references a link definition given at the end of the document ! And here is a direct link to the eXist [documentation](https://exist-db.org/exist/apps/docs "eXist-db Documentation").
+
+[1]: http://exist-db.org "eXist-db homepage"
 ]``
     let $parsed := markdown:parse($markdown)
     let $expected := 
         <body>
-            <p>This <a href="#">No link definition found for id 1</a> references a link definition given at the end of the document ! And here is a direct link to the eXist <a href="https://exist-db.org/exist/apps/docs" title="eXist-db Documentation">documentation</a>.</p>
+            <p>This <a href="http://exist-db.org" title="eXist-db homepage">link</a> references a link definition given at the end of the document ! And here is a direct link to the eXist <a href="https://exist-db.org/exist/apps/docs" title="eXist-db Documentation">documentation</a>.</p>
         </body>
     return
         deep-equal($parsed, $expected)
@@ -157,6 +159,8 @@ function tests:images() {
     let $markdown := ``[![eXist-db Logo](https://exist-db.org/exist/apps/homepage/resources/img/existdb.gif "Our Logo")
 
 Image linked through reference: ![Read more][glasses].
+
+[glasses]: http://exist-db.org/exist/apps/homepage/resources/img/book-cover.gif "Documentation"
 ]``
     let $parsed := markdown:parse($markdown)
     let $expected :=
@@ -164,7 +168,7 @@ Image linked through reference: ![Read more][glasses].
             <p>
                 <img src="https://exist-db.org/exist/apps/homepage/resources/img/existdb.gif" alt="eXist-db Logo" title="Our Logo"/>
             </p>
-            <p>Image linked through reference: <img src="#" alt="No link definition found for id glasses"/>.</p>
+            <p>Image linked through reference: <img alt="Read more" title="Documentation" src="http://exist-db.org/exist/apps/homepage/resources/img/book-cover.gif"/>.</p>
         </body>
     return
         deep-equal($parsed, $expected)
