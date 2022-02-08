@@ -10,8 +10,8 @@ Markdown Parser in XQuery
 
 Based on regular expressions and fast enough for rendering small to mid-sized documents.
 
-The parser extends the [original markdown][2] proposal with fenced code 
-blocks and tables. These are additional features found in [Github flavored markdown][1].
+The parser extends the [original Markdown][2] proposal with fenced code 
+blocks and tables. These are additional features found in [Github Flavored Markdown][1].
 
 [1]: https://help.github.com/articles/github-flavored-markdown
 [2]: http://daringfireball.net/projects/markdown/syntax
@@ -30,7 +30,7 @@ blocks and tables. These are additional features found in [Github flavored markd
 
     1.  Click on the `add package` symbol in the upper left corner and select the `.xar` file you just downloaded.
 
-3.  You have successfully installed markdown into exist.
+3.  You have successfully installed the markdown library into exist.
 
 ### Building from source
 
