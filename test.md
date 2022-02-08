@@ -109,8 +109,8 @@ A <span style="color: red;">paragraph <span style="color: green;">containing</sp
 
 # TEI output
 
-Besides producing HTML, the module can also transform [markdown into TEI](?mode=tei). To test, just append `?mode=tei`
-to the URL. Other output formats can be supported as well by adding a simple configuration, see [tei-config.xql](https://github.com/eXist-db/exist-markdown/blob/master/content/tei-config.xqm).
+Besides producing HTML, the module can also transform Markdown into TEI. 
+Other output formats can be supported as well by adding a simple configuration, see [tei-config.xqm](https://github.com/eXist-db/exist-markdown/blob/master/content/tei-config.xqm).
  
 [1]: https://exist-db.org "eXist-db homepage"
 [2]: https://help.github.com/articles/github-flavored-markdown
