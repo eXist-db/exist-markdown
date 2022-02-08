@@ -190,6 +190,29 @@ function tests:labels() {
 };
 
 declare
+    %test:name('Code Blocks')
+    %test:assertTrue
+    %test:pending('The raw code block is piped into a p instead of a pre/@data-language=xquery structure')
+function tests:code-blocks() {
+    let $markdown := ``[```xquery
+for $i in 1 to 10
+return
+    <li>{$i * 2}</li>
+```
+]``
+    let $parsed := markdown:parse($markdown)
+    let $expected :=
+        <body>
+            <pre data-language="xquery">{``[for $i in 1 to 10
+return
+    <li>{$i * 2}</li>]]``}
+            </pre>
+        </body>
+    return
+        deep-equal($parsed, $expected)
+};
+
+declare
     %test:name('Tables')
     %test:assertTrue
 function tests:tables() {
@@ -239,28 +262,6 @@ simple table | column1 | column2
                     </tr>
                 </tbody>
             </table>
-        </body>
-    return
-        deep-equal($parsed, $expected)
-};
-
-
-declare
-    %test:name('HTML blocks')
-    %test:assertTrue
-    %test:pending('It is not producing the expected result')
-function tests:htmlblocks() {
-    let $markdown := ``[```xml
-<figure>
-    <img src="https://exist-db.org/exist/apps/homepage/resources/img/existdb.gif"/>
-</figure>
-```
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected :=
-        <body>
-            <pre data-language="xml"><figure><img src="http://exist-db.org/exist/apps/homepage/resources/img/existdb.gif"/>
-</figure></pre>
         </body>
     return
         deep-equal($parsed, $expected)
