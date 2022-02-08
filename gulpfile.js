@@ -24,7 +24,8 @@ const connectionOptions = {
         pass: serverInfo.password
     },
     host: hostname,
-    port
+    port,
+    secure: false
 }
 const existClient = createClient(connectionOptions);
 
