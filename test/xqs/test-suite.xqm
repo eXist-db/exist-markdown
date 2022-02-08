@@ -20,6 +20,10 @@ function tests:tautology() {
     1 = 1
 };
 
+(:============:)
+(: Paragraphs :)
+(:============:)
+
 declare
     %test:name('Paragraphs are separated from following blocks by a blank line')
     %test:assertTrue
@@ -31,6 +35,11 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur nec lobortis 
     return
         count(markdown:parse($markdown)/p) eq 2
 };
+
+
+(:======:)
+(: Code :)
+(:======:)
 
 declare
     %test:name('Format inline code snippets with a pair of backticks')
@@ -49,6 +58,10 @@ function tests:inline-code-escape-backticks() {
     return
         markdown:parse($markdown)/p/code/string()
 };
+
+(:=======:)
+(: Lists :)
+(:=======:)
 
 declare
     %test:name('Simple lists')
@@ -134,6 +147,11 @@ function tests:quotes() {
         deep-equal($parsed, $expected)
 };
 
+
+(:=======:)
+(: Links :)
+(:=======:)
+
 declare
     %test:name('Links')
     %test:assertTrue
@@ -151,6 +169,10 @@ This [link][1] references a link definition given at the end of the document ! A
     return
         deep-equal($parsed, $expected)
 };
+
+(:========:)
+(: Images :)
+(:========:)
 
 declare
     %test:name('Images')
@@ -174,6 +196,10 @@ Image linked through reference: ![Read more][glasses].
         deep-equal($parsed, $expected)
 };
 
+(:========:)
+(: Labels :)
+(:========:)
+
 declare
     %test:name('Labels')
     %test:assertTrue
@@ -192,6 +218,10 @@ function tests:labels() {
     return
         deep-equal($parsed, $expected)
 };
+
+(:=============:)
+(: Code Blocks :)
+(:=============:)
 
 declare
     %test:name('Code Blocks')
@@ -215,6 +245,10 @@ return
     return
         deep-equal($parsed, $expected)
 };
+
+(:========:)
+(: Tables :)
+(:========:)
 
 declare
     %test:name('Table')
@@ -271,6 +305,10 @@ simple table | column1 | column2
         deep-equal($parsed, $expected)
 };
 
+(:=============:)
+(: HTML Blocks :)
+(:=============:)
+
 declare
     %test:name('HTML blocks containing markdown')
     %test:assertTrue
@@ -303,6 +341,10 @@ function tests:html-block-containing-markdown() {
     return
         deep-equal($parsed, $expected)
 };
+
+(:=============:)
+(: Inline HTML :)
+(:=============:)
 
 declare
     %test:name('Inline HTML')
