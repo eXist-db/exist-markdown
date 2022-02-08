@@ -13,6 +13,7 @@ xquery version "3.1";
 module namespace tests = "http://exist-db.org/xquery/markdown/tests";
 
 import module namespace markdown="http://exist-db.org/xquery/markdown";
+import module namespace mdt="http://exist-db.org/xquery/markdown/tei";
 
 declare namespace test="http://exist-db.org/xquery/xqsuite";
 
@@ -411,6 +412,31 @@ A fifth paragraph.
                 <h1>TEI output</h1>
                 <p>A fifth paragraph.</p>
             </section>
+        </body>
+    return
+        deep-equal($parsed, $expected)
+};
+
+(:============:)
+(: TEI output :)
+(:============:)
+
+declare
+    %test:name('TEI output')
+    %test:assertTrue
+function tests:tei-output() {
+    let $markdown := ``[# TEI output
+
+Besides producing HTML, the module can also transform Markdown into TEI. 
+Other output formats can be supported as well by adding a simple configuration, see [tei-config.xql](https://github.com/eXist-db/exist-markdown/blob/master/content/tei-config.xqm).
+]``
+    let $parsed := markdown:parse($markdown, $mdt:CONFIG)
+    let $expected := 
+        <body xmlns="http://www.tei-c.org/ns/1.0">
+            <div>
+                <head n="1">TEI output</head>
+                <p>Besides producing HTML, the module can also transform Markdown into TEI. Other output formats can be supported as well by adding a simple configuration, see <ref target="https://github.com/eXist-db/exist-markdown/blob/master/content/tei-config.xqm">tei-config.xql</ref>.</p>
+            </div>
         </body>
     return
         deep-equal($parsed, $expected)
