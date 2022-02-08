@@ -1,6 +1,6 @@
 # Supported Markdown syntax
 
-The parser extends the [original markdown][3] proposal with fenced code blocks and tables. These are additional features found in [Github flavored markdown][2].
+The parser extends the [original Markdown][3] proposal with fenced code blocks and tables. These are additional features found in [Github Flavored Markdown][2].
 
 ## Paragraphs
 Paragraphs are separated from following blocks by a blank line. 
@@ -90,7 +90,7 @@ is rendered as:
     <img src="https://exist-db.org/exist/apps/homepage/resources/img/existdb.gif"/>
 </figure>
 
-HTML block containing markdown:
+HTML block containing Markdown:
 
 <div class="row">
     <div class="col-md-6">

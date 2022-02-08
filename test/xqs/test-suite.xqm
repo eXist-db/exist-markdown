@@ -1,6 +1,6 @@
 xquery version "3.1";
 
-(:~ This library module contains XQSuite tests for the markdown app.
+(:~ This library module contains XQSuite tests for the eXist-db Markdown library package.
  : 
  : The tests here are based on the implicit tests expressed in test.md, with expected
  : results inferred from the operation of the library. 
