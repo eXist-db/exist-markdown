@@ -355,3 +355,60 @@ function tests:inline-html() {
     return
         deep-equal($parsed, $expected)
 };
+
+
+(:=========:)
+(: Headers :)
+(:=========:)
+
+declare
+    %test:name('Atx-style headers and hierarchically nested sections')
+    %test:assertTrue
+function tests:atx-style-headers-and-nested-sections() {
+    let $markdown := ``[# Supported Markdown syntax
+
+A paragraph.
+
+## Lists
+
+Another paragraph.
+
+### Simple list
+
+A third paragraph.
+
+## Inline HTML
+
+A fourth paragraph.
+
+# TEI output
+
+A fifth paragraph.
+]``
+    let $parsed := markdown:parse($markdown)
+    let $expected := 
+        <body>
+            <section>
+                <h1>Supported Markdown syntax</h1>
+                <p>A paragraph.</p>
+                <section>
+                    <h2>Lists</h2>
+                    <p>Another paragraph.</p>
+                    <section>
+                        <h3>Simple list</h3>
+                        <p>A third paragraph.</p>
+                    </section>
+                </section>
+                <section>
+                    <h2>Inline HTML</h2>
+                    <p>A fourth paragraph.</p>
+                </section>
+            </section>
+            <section>
+                <h1>TEI output</h1>
+                <p>A fifth paragraph.</p>
+            </section>
+        </body>
+    return
+        deep-equal($parsed, $expected)
+};
