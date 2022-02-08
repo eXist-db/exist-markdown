@@ -312,8 +312,11 @@ function tests:inline-html() {
     let $markdown := ``[A <span style="color: red;">paragraph <span style="color: green;">containing</span></span> some <mark>inline</mark> <code>HTML</code>.
 ]``
     let $parsed := markdown:parse($markdown)
-    let $expected := <body><p>A <span style="color: red;">paragraph <span style="color: green;">containing</span>
-        </span> some <mark>inline</mark> <code>HTML</code>.</p></body>
+    let $expected := 
+        <body>
+            <p>A <span style="color: red;">paragraph <span style="color: green;">containing</span></span>
+                some <code>HTML</code>.</p>
+        </body>
     return
         deep-equal($parsed, $expected)
 };
