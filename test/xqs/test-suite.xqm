@@ -51,7 +51,7 @@ function tests:inline-code-escape-backticks() {
 };
 
 declare
-    %test:name('Simple lists are rendered correctly')
+    %test:name('Simple lists')
     %test:assertTrue
 function tests:simple-list() {
     let $markdown := ``[* Buy milk
@@ -90,9 +90,9 @@ function tests:nested-list() {
 };
 
 declare
-    %test:name('Tasks list')
+    %test:name('Task list')
     %test:assertTrue
-function tests:tasks-list() {
+function tests:task-list() {
     let $markdown := ``[* [x] write documentation
 * [ ] create tests
 ]``
@@ -213,9 +213,9 @@ return
 };
 
 declare
-    %test:name('Tables')
+    %test:name('Table')
     %test:assertTrue
-function tests:tables() {
+function tests:table() {
     let $markdown := ``[| Tables        | Are           | Cool  |
 | ------------- |:-------------:| -----:|
 | col 3 is      | right-aligned | $1600 |
@@ -268,11 +268,10 @@ simple table | column1 | column2
 };
 
 declare
-
     %test:name('HTML blocks containing markdown')
     %test:assertTrue
     %test:pending('We need a precise expected output')
-function tests:htmlblocks-with-markdown() {
+function tests:html-block-containing-markdown() {
     let $markdown := ``[<div class="row">
     <div class="col-md-6">
         First column in **two column layout**.
@@ -294,7 +293,7 @@ declare
     %test:name('Inline HTML')
     %test:assertTrue
     %test:pending('The mark element is not rendered')
-function tests:inline-HTML() {
+function tests:inline-html() {
     let $markdown := ``[A <span style="color: red;">paragraph <span style="color: green;">containing</span></span> some <mark>inline</mark> <code>HTML</code>.
 ]``
     let $parsed := markdown:parse($markdown)
