@@ -1,0 +1,30 @@
+{
+    "servers": {
+        "localhost": {
+            "server": "http://localhost:8080/exist",
+            "user": "admin",
+            "password": "",
+            "root": "/db/system/repo/markdown"
+        }
+    },
+    "sync": {
+        "server": "localhost",
+        "ignore": [
+            ".existdb.json",
+            ".git/**",
+            "node_modules/**",
+            "package*.json",
+            ".vscode/**"
+        ]
+    },
+    "package": {
+        "author": "eXist-db Project",
+        "target": "markdown",
+        "description": "Markdown Parser in XQuery",
+        "namespace": "http://exist-db.org/apps/markdown",
+        "website": "https://github.com/eXist-db/exist-markdown",
+        "status": "beta",
+        "title": "Markdown Parser in XQuery",
+        "license": "LGPL-2.1"
+    }
+}

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package xmlns="http://expath.org/ns/pkg" name="http://exist-db.org/apps/markdown" abbrev="markdown" version="@project.version@" spec="1.0">
+<package xmlns="http://expath.org/ns/pkg" name="@namespace@" abbrev="@target@" version="@version@" spec="1.0">
     <title>Markdown Parser in XQuery</title>
     <dependency processor="http://exist-db.org" semver-min="5.3.0"/>
     <xquery>
         <namespace>http://exist-db.org/xquery/markdown</namespace>
-        <file>markdown.xql</file>
+        <file>markdown.xqm</file>
     </xquery>
     <xquery>
         <namespace>http://exist-db.org/xquery/markdown/tei</namespace>
-        <file>tei-config.xql</file>
+        <file>tei-config.xqm</file>
     </xquery>
 </package>
