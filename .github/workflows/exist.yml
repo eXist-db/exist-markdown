@@ -10,6 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+       fail-fast: false
        matrix:
          exist-version: [latest, release]
          node-version: [20, 22]
