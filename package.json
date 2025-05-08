@@ -34,6 +34,7 @@
   "license": "GNU-LGPL",
   "scripts": {
     "start": "npm install && npm run build",
+  "install": "gulp install:all",
 	"test": "gulp install:all && mocha test/mocha --recursive --exit && mocha test/xqs/*.js",
 	"test:watch": "mocha test/mocha --recursive --watch",
 	"build": "gulp build",
