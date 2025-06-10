@@ -18,13 +18,13 @@ blocks and tables. These are additional features found in [Github Flavored Markd
 
 ## Requirements
 
-*   [exist-db](https://exist-db.org/exist/apps/homepage/index.html) version: `5.x` or greater
+*   [exist-db](https://exist-db.org/exist/apps/homepage/index.html) version: `6.x` or greater
 
-*   [node](https://nodejs.org) version: `12.x` \(for building from source\)
+*   [node](https://nodejs.org) version: `20.x` \(for building from source\)
 
 ## Installation
 
-1.  Install the Markdown package from eXist's package repository via the [dashboard](http://localhost:8080/exist/apps/dashboard/index.html), or download  the `markdown-1.0.0.xar` file from GitHub [releases](https://github.com/eXist-db/exist-markdown/releases) page.
+1.  Install the Markdown package from eXist's package repository via the [dashboard](http://localhost:8080/exist/apps/dashboard/index.html), or download  the `markdown-2.0.0.xar` file from GitHub [releases](https://github.com/eXist-db/exist-markdown/releases) page.
 
 2.  Open the [dashboard](http://localhost:8080/exist/apps/dashboard/index.html) of your eXist-db instance and click on `package manager`.
 

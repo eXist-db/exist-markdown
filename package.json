@@ -1,6 +1,6 @@
 {
   "name": "markdown",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Markdown Parser in XQuery",
   "homepage": "https://github.com/eXist-db/exist-markdown#readme",
   "bugs": "https://github.com/eXist-db/exist-markdown/issues",
