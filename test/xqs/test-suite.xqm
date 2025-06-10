@@ -223,7 +223,7 @@ function tests:labels() {
 declare
     %test:name('Code Blocks')
     %test:assertTrue
-    %test:pending('The raw code block is piped into a p instead of a pre/@data-language=xquery structure')
+    %test:pending('The curly braces in the fenced code block are replaced with `<span dataprop=""`')
 function tests:code-blocks() {
     let $markdown := ``[```xquery
 for $i in 1 to 10
@@ -236,8 +236,8 @@ return
         <body>
             <pre data-language="xquery">{``[for $i in 1 to 10
 return
-    <li>{$i * 2}</li>]]``}
-            </pre>
+    <li>{$i * 2}</li>
+]``}</pre>
         </body>
     return
         deep-equal($parsed, $expected)
@@ -346,7 +346,7 @@ function tests:html-block-containing-markdown() {
 declare
     %test:name('Inline HTML')
     %test:assertTrue
-    %test:pending('The mark element is not rendered')
+    %test:pending('The mark element is dropped from the output')
 function tests:inline-html() {
     let $markdown := ``[A <span style="color: red;">paragraph <span style="color: green;">containing</span></span> some <mark>inline</mark> <code>HTML</code>.
 ]``
@@ -354,7 +354,7 @@ function tests:inline-html() {
     let $expected := 
         <body>
             <p>A <span style="color: red;">paragraph <span style="color: green;">containing</span></span>
-                some <code>HTML</code>.</p>
+                some <mark>inline</mark> <code>HTML</code>.</p>
         </body>
     return
         deep-equal($parsed, $expected)

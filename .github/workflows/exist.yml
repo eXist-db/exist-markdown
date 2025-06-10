@@ -10,9 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+       fail-fast: false
        matrix:
          exist-version: [latest, release]
-         node-version: [14.x]
+         node-version: [20, 22]
     # TODO: see #563 could still be usefull for gulp builds 
     # services:
     #   # Label used to access the service container
@@ -23,49 +24,29 @@ jobs:
 
     steps:
       # Checkout code
-      - uses: actions/checkout@v2
-      # set-up caches
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-        
+      - uses: actions/checkout@v4       
 
       # Build Frontend
-      - name: Build Frontend Using Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - name: Build Using Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm ci
-      
-      - run: npm run build:all
-      
+          cache: 'npm'
+      - run: npm start
+            
       # Deploy Package in Container
-      - name: Pull Base Image
-        run: docker pull existdb/existdb:${{ matrix.exist-version }}
-
-      - name: Create CI Container
-        run: docker create  --name exist-ci -p 8080:8080 existdb/existdb:${{ matrix.exist-version }} 
-
-      - name: Prep CI Container
-        run: docker cp ./markdown-*.xar exist-ci:exist/autodeploy
-
-      - name: Start Exist Container
-        run: docker start exist-ci && sleep 30
+      - name: Start exist-ci containers
+        run: |
+          docker run -dit -p 8080:8080 -v ${{ github.workspace }}/target:/exist/autodeploy \
+          --name exist --rm --health-interval=1s --health-start-period=1s \
+          duncdrum/existdb:${{ matrix.exist-version }}
+      
+      - name: wait for install to finish
+        timeout-minutes: 3
+        run: |
+          while ! docker logs exist | grep -q "Server has started"; \
+          do sleep 6s; \
+          done
 
       # Testing 
       - name: Run Unit Tests     
@@ -79,13 +60,13 @@ jobs:
   #   if: github.ref == 'refs/heads/master'
   #   steps:
   #     - name: Checkout
-  #       uses: actions/checkout@v2
+  #       uses: actions/checkout@v4
   #       with:
   #         fetch-depth: 0
   #     - name: Setup Node.js
-  #       uses: actions/setup-node@v1
+  #       uses: actions/setup-node@v3
   #       with:
-  #         node-version: 14
+  #         node-version: 22
   #     - name: Install dependencies
   #       run: npm ci
   #     - name: Create package

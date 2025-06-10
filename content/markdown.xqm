@@ -321,7 +321,7 @@ declare %private function markdown:quote($block as xs:string, $config as map(*))
 declare %private function markdown:table($block as xs:string, $config as map(*)) {
     if (matches($block, ".*\|.*")) then
         $config?table(
-            let $block := replace($block, "^\s*(.*)", "$1")
+            let $block := replace($block, "^\s*(.+)$", "$1")
             let $rows := tokenize($block, "\n")
             let $colspec :=
                 if (matches($rows[2], "\-{2,}\s*\|")) then

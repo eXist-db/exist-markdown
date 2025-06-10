@@ -35,7 +35,7 @@ const static = [
 ]
 
 // construct the current xar name from available data
-const packageName = () => `${package.target}-${version}.xar`
+const packageName = () => `target/${package.target}-${version}.xar`
 
 /**
  * helper function that uploads and installs a built XAR
