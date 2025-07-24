@@ -15,7 +15,7 @@
   "devDependencies": {
     "@existdb/gulp-exist": "^5.0.0",
     "@existdb/gulp-replace-tmpl": "^1.0.4",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "chai": "^5.2.1",
     "chai-xml": "^0.4.1",
     "delete": "^1.1.0",
