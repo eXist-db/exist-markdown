@@ -24,7 +24,7 @@ jobs:
 
     steps:
       # Checkout code
-      - uses: actions/checkout@v4       
+      - uses: actions/checkout@v5       
 
       # Build Frontend
       - name: Build Using Node.js ${{ matrix.node-version }}
@@ -60,7 +60,7 @@ jobs:
   #   if: github.ref == 'refs/heads/master'
   #   steps:
   #     - name: Checkout
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v5
   #       with:
   #         fetch-depth: 0
   #     - name: Setup Node.js
