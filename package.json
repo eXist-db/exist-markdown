@@ -23,7 +23,7 @@
     "gulp": "^4.0.2",
     "gulp-rename": "^2.0.0",
     "gulp-zip": "^5.0.2",
-    "jsdom": "^27.3.0",
+    "jsdom": "^27.4.0",
     "mocha": "^11.7.5",
     "xmldoc": "^2.0.3",
     "yeoman-assert": "^3.1.1"
