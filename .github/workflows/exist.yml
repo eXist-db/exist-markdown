@@ -1,6 +1,4 @@
-# This workflow builds a xar archive, deploys it into exist and execute its test suites.
-# It also includes code for using semantic-release to upload packages as part of GitHub releases
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+# This workflow builds a xar archive, deploys it into exist and executes its test suites.
 
 name: exist-db CI
 
@@ -12,68 +10,58 @@ jobs:
     strategy:
        fail-fast: false
        matrix:
-         exist-version: [latest, release]
-         node-version: [20, 22]
-    # TODO: see #563 could still be usefull for gulp builds 
-    # services:
-    #   # Label used to access the service container
-    #   exist:
-    #     image: existdb/existdb:${{ matrix.exist-version}}
-    #     ports:
-    #       - 8080:8080
+         exist-version: [latest]
 
     steps:
-      # Checkout code
-      - uses: actions/checkout@v6       
+      - uses: actions/checkout@v6
 
-      # Build Frontend
-      - name: Build Using Node.js ${{ matrix.node-version }}
+      # Build with Maven
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean package -q
+
+      # Static file checks
+      - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 'lts/*'
           cache: 'npm'
-      - run: npm start
-            
-      # Deploy Package in Container
-      - name: Start exist-ci containers
+
+      - run: npm ci
+
+      - name: Run file checks
+        run: npx mocha test/mocha --recursive --exit
+
+      # Deploy XAR in Container
+      - name: Pull latest eXist-db image
+        run: docker pull duncdrum/existdb:${{ matrix.exist-version }}
+
+      - name: Start eXist-db container
         run: |
-          docker run -dit -p 8080:8080 -v ${{ github.workspace }}/target:/exist/autodeploy \
+          docker run -dit -p 8080:8080 \
+          -v ${{ github.workspace }}/target:/exist/autodeploy \
           --name exist --rm --health-interval=1s --health-start-period=1s \
           duncdrum/existdb:${{ matrix.exist-version }}
-      
-      - name: wait for install to finish
-        timeout-minutes: 3
+
+      - name: Wait for eXist-db to start and deploy packages
+        timeout-minutes: 5
         run: |
           while ! docker logs exist | grep -q "Server has started"; \
           do sleep 6s; \
           done
+          # Wait for autodeploy to finish processing the XAR
+          until curl -sf -u admin: \
+            'http://localhost:8080/exist/rest/db/system/repo/markdown-3.0.0/test/xqs/test-runner.xq' \
+            > /dev/null 2>&1; \
+          do sleep 2; done
 
-      # Testing 
-      - name: Run Unit Tests     
-        run: npm test
-  
-  # TODO: Add upload to dockerhub   
-  # release:
-  #   name: Release
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   if: github.ref == 'refs/heads/master'
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v6
-  #       with:
-  #         fetch-depth: 0
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: 22
-  #     - name: Install dependencies
-  #       run: npm ci
-  #     - name: Create package
-  #       run: npm run build
-  #     - name: Release
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       run: npx semantic-release
-    
+      # Run XQSuite tests (xqSuite.js creates its own Mocha instance)
+      - name: Run XQSuite tests
+        run: node test/xqs/xqSuite.js
 
