@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://expath.org/ns/pkg"
+         name="${package-name}"
+         abbrev="${package-abbrev}"
+         version="${project.version}"
+         spec="1.0">
+    <title>${project.name}</title>
+    <description>${project.description}</description>
+    <author id="exist-db">${project.organization.name}</author>
+    <website>${project.url}</website>
+    <license>GNU Lesser General Public License, version 2.1</license>
+    <copyright>true</copyright>
+
+    <type>library</type>
+
+    <status>stable</status>
+
+    <tag>${project.artifactId}</tag>
+    <tag>markdown</tag>
+    <tag>commonmark</tag>
+    <tag>gfm</tag>
+    <category id="libs">Libraries</category>
+
+    <dependency processor="http://exist-db.org" semver-min="${exist.version}"/>
+
+    <target>${package-abbrev}</target>
+
+    <fileSets>
+        <fileSet>
+            <directory>${basedir}</directory>
+            <includes>
+                <include>README.md</include>
+                <include>LICENSE</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/test/xqs</directory>
+            <outputDirectory>test/xqs</outputDirectory>
+        </fileSet>
+    </fileSets>
+
+    <!-- include the Java module JAR from this project -->
+    <dependencySets>
+        <dependencySet>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${project.version}</version>
+        </dependencySet>
+        <!-- flexmark core -->
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-ast</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-builder</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-collection</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-data</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-dependency</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-format</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-html</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-misc</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-options</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-sequence</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-util-visitor</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <!-- flexmark extensions -->
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-tables</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-gfm-strikethrough</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-gfm-tasklist</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-autolink</artifactId>
+            <version>${flexmark.version}</version>
+        </dependencySet>
+        <!-- autolink transitive dependency -->
+        <dependencySet>
+            <groupId>org.nibor.autolink</groupId>
+            <artifactId>autolink</artifactId>
+            <version>0.6.0</version>
+        </dependencySet>
+        <dependencySet>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>24.0.1</version>
+        </dependencySet>
+    </dependencySets>
+
+    <!-- register the Java module to eXist-db -->
+    <components>
+        <resource>
+            <public-uri>${markdown.module.namespace}</public-uri>
+            <file>urn:java:class:${markdown.module.java.classname}</file>
+        </resource>
+    </components>
+
+    <changelog>
+        <change xmlns="http://exist-db.org/xquery/repo" version="3.0.0">
+            <ul xmlns="http://www.w3.org/1999/xhtml">
+                <li>BREAKING CHANGE: Replace regex-based XQuery parser with flexmark-java for full CommonMark/GFM compliance</li>
+                <li>BREAKING CHANGE: md:parse() now returns md:* XML elements instead of HTML</li>
+                <li>New md:to-html() function for HTML rendering (string and node overloads)</li>
+                <li>New md:serialize() function for round-tripping back to markdown</li>
+                <li>Configurable parser profiles and extensions via options map</li>
+                <li>GFM extensions: tables, strikethrough, task lists, autolinks</li>
+                <li>Fenced code blocks preserve language labels</li>
+                <li>Switch build system from npm/Gulp to Maven</li>
+            </ul>
+        </change>
+    </changelog>
+</package>
