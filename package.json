@@ -1,7 +1,7 @@
 {
-  "name": "markdown",
-  "version": "2.0.0",
-  "description": "Markdown Parser in XQuery",
+  "name": "exist-markdown",
+  "version": "3.0.0",
+  "description": "CommonMark/GFM markdown parser for eXist-db using flexmark-java",
   "homepage": "https://github.com/eXist-db/exist-markdown#readme",
   "bugs": "https://github.com/eXist-db/exist-markdown/issues",
   "keywords": [
