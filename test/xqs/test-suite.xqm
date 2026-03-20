@@ -1,443 +1,633 @@
 xquery version "3.1";
 
-(:~ This library module contains XQSuite tests for the eXist-db Markdown library package.
- : 
- : The tests here are based on the implicit tests expressed in test.md, with expected
- : results inferred from the operation of the library. 
+(:~ XQSuite tests for the eXist-db Markdown module (flexmark-java / CommonMark/GFM).
  :
  : @author The eXist-db Authors
- : @version 1.0.0
+ : @version 3.0.0
  : @see https://github.com/eXist-db/exist-markdown
  :)
-
 module namespace tests = "http://exist-db.org/xquery/markdown/tests";
 
-import module namespace markdown="http://exist-db.org/xquery/markdown";
-import module namespace mdt="http://exist-db.org/xquery/markdown/tei";
+import module namespace md = "http://exist-db.org/xquery/markdown";
 
-declare namespace test="http://exist-db.org/xquery/xqsuite";
+declare namespace test = "http://exist-db.org/xquery/xqsuite";
 
-(:============:)
-(: Paragraphs :)
-(:============:)
-
-declare
-    %test:name('Paragraphs are separated from following blocks by a blank line')
-    %test:assertTrue
-function tests:paragraph-delimiters() {
-    let $markdown := ``[Paragraphs are separated from following blocks by a blank line. 
-A single line break does **not** start a new paragraph.
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur nec lobortis magna. Fusce vestibulum felis a eros suscipit mattis. Pellentesque sit amet enim libero. Sed sed tempus nibh. Ut pellentesque quam ac bibendum iaculis. Suspendisse **vitae** interdum risus, convallis auctor urna. Mauris vel sapien ut sapien mollis rhoncus non a nibh. Nullam vulputate consequat purus, ut varius justo ornare vel. Etiam ornare diam at velit varius volutpat. Mauris vel luctus mi, at fermentum purus. *Vestibulum ante ipsum* primis in faucibus orci luctus et ultrices posuere cubilia Curae; Cras lobortis est dolor, et tristique lorem egestas vitae. Sed feugiat dictum nunc. Nullam ultricies vehicula aliquam. Cras felis ante, ultrices sed lacinia et, pharetra in tellus. Vivamus scelerisque ut mi a dapibus.]``
-    return
-        count(markdown:parse($markdown)/p) eq 2
-};
-
-
-(:======:)
-(: Code :)
-(:======:)
+(:==============================:)
+(: Installation / smoke tests   :)
+(:==============================:)
 
 declare
-    %test:name('Format inline code snippets with a pair of backticks')
-    %test:assertTrue
-function tests:inline-code() {
-    let $markdown := ``[To format inline code snippets, surround them with a single backtick: `request:get-parameter()`.]``
-    return
-        count(markdown:parse($markdown)/p/code) eq 1
+    %test:name("Module is installed — md:parse is available")
+    %test:assertXPath("$result instance of document-node()")
+function tests:install-parse-available() {
+    md:parse("hello")
 };
 
 declare
-    %test:name('Use two backticks to allow one backtick inside')
-    %test:assertEquals(' `ls` ')
-function tests:inline-code-escape-backticks() {
-    let $markdown := ``[Use two backticks to allow one backtick inside: `` `ls` ``.]``
-    return
-        markdown:parse($markdown)/p/code/string()
-};
-
-(:=======:)
-(: Lists :)
-(:=======:)
-
-declare
-    %test:name('Simple lists')
-    %test:assertTrue
-function tests:simple-list() {
-    let $markdown := ``[* Buy milk
-* Drink it
-* Be happy
-]``
-    return
-        count(markdown:parse($markdown)/ul/li) eq 3
+    %test:name("Module is installed — md:to-html (string) is available")
+    %test:assertExists
+function tests:install-to-html-string-available() {
+    md:to-html("hello")
 };
 
 declare
-    %test:name('Nested list')
-    %test:assertTrue
-function tests:nested-list() {
-    let $markdown := ``[1. One
+    %test:name("Module is installed — md:to-html (nodes) is available")
+    %test:assertExists
+function tests:install-to-html-nodes-available() {
+    md:to-html(md:parse("hello")//md:paragraph)
+};
+
+declare
+    %test:name("Module is installed — md:serialize is available")
+    %test:assertXPath("$result instance of xs:string")
+    %test:assertXPath("string-length($result) gt 0")
+function tests:install-serialize-available() {
+    md:serialize(md:parse("hello"))
+};
+
+declare
+    %test:name("md:parse returns document-node with md:document root")
+    %test:assertXPath("exists($result/Q{http://exist-db.org/xquery/markdown}document)")
+    %test:assertXPath("namespace-uri($result/Q{http://exist-db.org/xquery/markdown}document) = 'http://exist-db.org/xquery/markdown'")
+function tests:install-parse-returns-md-document() {
+    md:parse("# Test")
+};
+
+(:==================:)
+(: md:parse — basic  :)
+(:==================:)
+
+declare
+    %test:name("Parse ATX heading")
+    %test:assertXPath("$result/@level = '1'")
+    %test:assertXPath("$result/string() = 'Hello World'")
+function tests:parse-atx-heading() {
+    md:parse("# Hello World")//md:heading
+};
+
+declare
+    %test:name("Parse heading levels 1-6")
+    %test:assertXPath("count($result) eq 6")
+    %test:assertXPath("$result[1]/@level = '1'")
+    %test:assertXPath("$result[6]/@level = '6'")
+function tests:parse-heading-levels() {
+    md:parse("# H1
+## H2
+### H3
+#### H4
+##### H5
+###### H6")//md:heading
+};
+
+declare
+    %test:name("Parse paragraph")
+    %test:assertXPath("contains($result, 'Hello world.')")
+function tests:parse-paragraph() {
+    md:parse("Hello world.")//md:paragraph
+};
+
+declare
+    %test:name("Two paragraphs separated by blank line")
+    %test:assertXPath("count($result) eq 2")
+function tests:parse-two-paragraphs() {
+    md:parse("First paragraph.
+
+Second paragraph.")//md:paragraph
+};
+
+(:==========================:)
+(: md:parse — inline markup  :)
+(:==========================:)
+
+declare
+    %test:name("Parse inline code")
+    %test:assertEquals("request:get-parameter()")
+function tests:parse-inline-code() {
+    md:parse("Use the `request:get-parameter()` function.")//md:code/string()
+};
+
+declare
+    %test:name("Parse double-backtick inline code")
+    %test:assertEquals(" `ls` ")
+function tests:parse-inline-code-double-backtick() {
+    md:parse("Use `` `ls` `` here.")//md:code/string()
+};
+
+declare
+    %test:name("Parse emphasis and strong")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}emphasis/string() = 'italic'")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}strong/string() = 'bold'")
+function tests:parse-emphasis-strong() {
+    md:parse("This is *italic* and **bold** text.")
+};
+
+declare
+    %test:name("Parse strikethrough")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}strikethrough/string() = 'deleted'")
+function tests:parse-strikethrough() {
+    md:parse("This is ~~deleted~~ text.")
+};
+
+(:===============================:)
+(: md:parse — fenced code blocks  :)
+(:===============================:)
+
+declare
+    %test:name("Fenced code block with language label")
+    %test:assertXPath("$result/@language = 'xquery'")
+    %test:assertXPath("contains($result/string(), 'let $x := 1')")
+function tests:parse-fenced-code-with-language() {
+    md:parse("```xquery
+let $x := 1
+return $x
+```")//md:fenced-code
+};
+
+declare
+    %test:name("Fenced code block without language")
+    %test:assertXPath("exists($result)")
+    %test:assertXPath("empty($result/@language)")
+    %test:assertXPath("contains($result/string(), 'some code')")
+function tests:parse-fenced-code-no-language() {
+    md:parse("```
+some code
+```")//md:fenced-code
+};
+
+declare
+    %test:name("Fenced code block preserves content exactly")
+    %test:assertXPath("$result/@language = 'xml'")
+    %test:assertXPath("contains($result/string(), '<root>')")
+    %test:assertXPath("contains($result/string(), '<child')")
+function tests:parse-fenced-code-preserves-content() {
+    md:parse('```xml
+<root>
+    <child attr="value"/>
+</root>
+```')//md:fenced-code
+};
+
+(:================:)
+(: md:parse — links :)
+(:================:)
+
+declare
+    %test:name("Parse inline link")
+    %test:assertXPath("$result/@href = 'https://exist-db.org'")
+    %test:assertXPath("$result/@title = 'eXist Homepage'")
+    %test:assertXPath("$result/string() = 'eXist-db'")
+function tests:parse-inline-link() {
+    md:parse('Visit [eXist-db](https://exist-db.org "eXist Homepage").')//md:link
+};
+
+declare
+    %test:name("Parse inline link without title")
+    %test:assertXPath("$result/@href = 'https://example.com'")
+    %test:assertXPath("empty($result/@title)")
+function tests:parse-inline-link-no-title() {
+    md:parse("Click [here](https://example.com).")//md:link
+};
+
+(:==================:)
+(: md:parse — images :)
+(:==================:)
+
+declare
+    %test:name("Parse image")
+    %test:assertXPath("$result/@src = 'https://example.com/logo.png'")
+    %test:assertXPath("$result/@alt = 'Logo'")
+    %test:assertXPath("$result/@title = 'Our Logo'")
+function tests:parse-image() {
+    md:parse('![Logo](https://example.com/logo.png "Our Logo")')//md:image
+};
+
+(:================:)
+(: md:parse — lists :)
+(:================:)
+
+declare
+    %test:name("Parse bullet list")
+    %test:assertXPath("$result/@type = 'bullet'")
+    %test:assertXPath("count($result/Q{http://exist-db.org/xquery/markdown}list-item) eq 3")
+function tests:parse-bullet-list() {
+    md:parse("- Buy milk
+- Drink it
+- Be happy")//md:list
+};
+
+declare
+    %test:name("Parse ordered list")
+    %test:assertXPath("$result/@type = 'ordered'")
+    %test:assertXPath("count($result/Q{http://exist-db.org/xquery/markdown}list-item) eq 3")
+function tests:parse-ordered-list() {
+    md:parse("1. First
+2. Second
+3. Third")//md:list
+};
+
+declare
+    %test:name("Parse task list")
+    %test:assertXPath("count($result) eq 2")
+    %test:assertXPath("$result[1]/@checked = 'true'")
+    %test:assertXPath("$result[2]/@checked = 'false'")
+function tests:parse-task-list() {
+    md:parse("- [x] Write docs
+- [ ] Create tests")//md:list-item[@task = 'true']
+};
+
+declare
+    %test:name("Parse nested list")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}list[@type = 'ordered'])")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}list[@type = 'bullet'])")
+function tests:parse-nested-list() {
+    md:parse("1. One
 2. Two
-    * A nested list item
-    * in an unordered list.
-3. Four
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected := 
-        <body>
-            <ol>
-                <li>One</li>
-                <li>Two<ul>
-                        <li>A nested list item</li>
-                        <li>in an unordered list.</li>
-                    </ul>
-                </li>
-                <li>Four</li>
-            </ol>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+    - Nested A
+    - Nested B
+3. Three")
+};
+
+(:=======================:)
+(: md:parse — block quote :)
+(:=======================:)
+
+declare
+    %test:name("Parse block quote")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}blockquote)")
+    %test:assertXPath("contains(string($result//Q{http://exist-db.org/xquery/markdown}blockquote), 'This is quoted text.')")
+function tests:parse-blockquote() {
+    md:parse("> This is quoted text.")
+};
+
+(:=================:)
+(: md:parse — table :)
+(:=================:)
+
+declare
+    %test:name("Parse GFM table")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}th) eq 2")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}td) eq 4")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}th[1]/string() = 'Feature'")
+function tests:parse-table() {
+    md:parse("| Feature | Status |
+| --- | --- |
+| Tables | Done |
+| Tasks | WIP |")
 };
 
 declare
-    %test:name('Task list')
-    %test:assertTrue
-function tests:task-list() {
-    let $markdown := ``[* [x] write documentation
-* [ ] create tests
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected := 
-        <body>
-            <ul>
-                <li><label class="checkbox-inline"><input type="checkbox" value="" checked="checked"/> write documentation</label></li>
-                <li><label class="checkbox-inline"><input type="checkbox" value=""/> create tests</label></li>
-            </ul>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+    %test:name("Parse table with alignment")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}td[1]/@align = 'left'")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}td[2]/@align = 'center'")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}td[3]/@align = 'right'")
+function tests:parse-table-alignment() {
+    md:parse("| Left | Center | Right |
+| :--- | :---: | ---: |
+| a | b | c |")
+};
+
+(:=========================:)
+(: md:parse — thematic break :)
+(:=========================:)
+
+declare
+    %test:name("Parse thematic break")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}thematic-break)")
+function tests:parse-thematic-break() {
+    md:parse("Before
+
+---
+
+After")
+};
+
+(:========================:)
+(: md:to-html from string  :)
+(:========================:)
+
+declare
+    %test:name("to-html renders heading")
+    %test:assertXPath("$result/self::h2")
+    %test:assertXPath("$result/string() = 'Hello'")
+function tests:to-html-heading() {
+    md:to-html("## Hello")
 };
 
 declare
-    %test:name('Quotes')
-    %test:assertTrue
-function tests:quotes() {
-    let $markdown := ``[> Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim 
-> veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate 
-> velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit 
-> anim id est laborum.
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected := 
-        <body>
-            <blockquote>{
-                (
-                    " Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim ",
-                    " veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate ",
-                    " velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit ",
-                    " anim id est laborum."
-                )
-                => string-join("&#10;")
-            }</blockquote>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+    %test:name("to-html renders paragraph with inline code")
+    %test:assertXPath("$result/self::p")
+    %test:assertXPath("exists($result/code)")
+function tests:to-html-paragraph-inline-code() {
+    md:to-html("Use `map:merge()`.")
 };
 
-
-(:=======:)
-(: Links :)
-(:=======:)
-
 declare
-    %test:name('Links')
-    %test:assertTrue
-function tests:links() {
-    let $markdown := ``[
-This [link][1] references a link definition given at the end of the document ! And here is a direct link to the eXist [documentation](https://exist-db.org/exist/apps/docs "eXist-db Documentation").
-
-[1]: http://exist-db.org "eXist-db homepage"
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected := 
-        <body>
-            <p>This <a href="http://exist-db.org" title="eXist-db homepage">link</a> references a link definition given at the end of the document ! And here is a direct link to the eXist <a href="https://exist-db.org/exist/apps/docs" title="eXist-db Documentation">documentation</a>.</p>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+    %test:name("to-html renders fenced code block")
+    %test:assertXPath("$result/self::pre")
+    %test:assertXPath("$result/code/@class = 'language-xquery'")
+function tests:to-html-fenced-code() {
+    md:to-html("```xquery
+let $x := 1
+```")
 };
 
-(:========:)
-(: Images :)
-(:========:)
-
 declare
-    %test:name('Images')
-    %test:assertTrue
-function tests:images() {
-    let $markdown := ``[![eXist-db Logo](https://exist-db.org/exist/apps/homepage/resources/img/existdb.gif "Our Logo")
-
-Image linked through reference: ![Read more][glasses].
-
-[glasses]: http://exist-db.org/exist/apps/homepage/resources/img/book-cover.gif "Documentation"
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected :=
-        <body>
-            <p>
-                <img src="https://exist-db.org/exist/apps/homepage/resources/img/existdb.gif" alt="eXist-db Logo" title="Our Logo"/>
-            </p>
-            <p>Image linked through reference: <img alt="Read more" title="Documentation" src="http://exist-db.org/exist/apps/homepage/resources/img/book-cover.gif"/>.</p>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+    %test:name("to-html renders bullet list")
+    %test:assertXPath("$result/self::ul")
+    %test:assertXPath("count($result/li) eq 3")
+function tests:to-html-bullet-list() {
+    md:to-html("- One
+- Two
+- Three")
 };
 
-(:========:)
-(: Labels :)
-(:========:)
-
 declare
-    %test:name('Labels')
-    %test:assertTrue
-function tests:labels() {
-    let $markdown := ``[* {customer: eXist Solutions, foo enterprise}
-* {important}
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected :=
-        <body>
-            <ul>
-                <li><span itemprop="customer">eXist Solutions</span>, <span itemprop="customer">foo enterprise</span></li>
-                <li><span itemprop="important">important</span></li>
-            </ul>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+    %test:name("to-html renders table")
+    %test:assertXPath("$result/self::table")
+    %test:assertXPath("exists($result/thead)")
+    %test:assertXPath("exists($result/tbody)")
+function tests:to-html-table() {
+    md:to-html("| A | B |
+| --- | --- |
+| 1 | 2 |")
 };
 
-(:=============:)
-(: Code Blocks :)
-(:=============:)
+(:=======================:)
+(: md:to-html from nodes  :)
+(:=======================:)
 
 declare
-    %test:name('Code Blocks')
-    %test:assertTrue
-    %test:pending('The curly braces in the fenced code block are replaced with `<span dataprop=""`')
-function tests:code-blocks() {
-    let $markdown := ``[```xquery
+    %test:name("to-html from parsed heading node")
+    %test:assertXPath("$result/self::h1")
+    %test:assertXPath("$result/string() = 'Title'")
+function tests:to-html-nodes-heading() {
+    md:to-html(md:parse("# Title")//md:heading)
+};
+
+declare
+    %test:name("to-html from parsed fenced code preserves language")
+    %test:assertXPath("$result/self::pre")
+    %test:assertXPath("$result/code/@class = 'language-xquery'")
+function tests:to-html-nodes-fenced-code() {
+    md:to-html(md:parse("```xquery
+declare variable $x := 1;
+```")//md:fenced-code)
+};
+
+declare
+    %test:name("to-html from parsed paragraph with emphasis")
+    %test:assertXPath("$result/self::p")
+    %test:assertXPath("exists($result/strong)")
+    %test:assertXPath("exists($result/em)")
+function tests:to-html-nodes-paragraph-emphasis() {
+    md:to-html(md:parse("This is **bold** and *italic*.")//md:paragraph)
+};
+
+(:=================:)
+(: md:serialize      :)
+(:=================:)
+
+declare
+    %test:name("Serialize heading round-trip")
+    %test:assertXPath("contains($result, '# Hello World')")
+function tests:serialize-heading() {
+    md:serialize(md:parse("# Hello World"))
+};
+
+declare
+    %test:name("Serialize fenced code round-trip preserves language")
+    %test:assertXPath("contains($result, '```xquery')")
+    %test:assertXPath("contains($result, 'let $x := 1')")
+function tests:serialize-fenced-code() {
+    md:serialize(md:parse("```xquery
+let $x := 1
+```"))
+};
+
+declare
+    %test:name("Serialize bullet list round-trip")
+    %test:assertXPath("contains($result, '- Alpha')")
+    %test:assertXPath("contains($result, '- Beta')")
+    %test:assertXPath("contains($result, '- Gamma')")
+function tests:serialize-bullet-list() {
+    md:serialize(md:parse("- Alpha
+- Beta
+- Gamma"))
+};
+
+declare
+    %test:name("Serialize link round-trip")
+    %test:assertXPath("contains($result, '[eXist-db](https://exist-db.org)')")
+function tests:serialize-link() {
+    md:serialize(md:parse("Visit [eXist-db](https://exist-db.org)."))
+};
+
+declare
+    %test:name("Serialize emphasis round-trip")
+    %test:assertXPath("contains($result, '**bold**')")
+    %test:assertXPath("contains($result, '*italic*')")
+function tests:serialize-emphasis() {
+    md:serialize(md:parse("This is **bold** and *italic*."))
+};
+
+declare
+    %test:name("Serialize table round-trip")
+    %test:assertXPath("contains($result, '| A |')")
+    %test:assertXPath("contains($result, '| 1 |')")
+function tests:serialize-table() {
+    md:serialize(md:parse("| A | B |
+| --- | --- |
+| 1 | 2 |"))
+};
+
+(:=========================================:)
+(: Structural round-trip: parse → serialize :)
+(:   → re-parse yields same XML structure  :)
+(:=========================================:)
+
+declare
+    %test:name("Round-trip: heading preserves structure")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}heading) eq 1")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}heading/@level = '1'")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}heading/string() = 'Main Title'")
+function tests:roundtrip-heading-structure() {
+    let $first := md:parse("# Main Title")
+    return md:parse(md:serialize($first))
+};
+
+declare
+    %test:name("Round-trip: paragraph with inline formatting preserves structure")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}strong)")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}emphasis)")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}code)")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}strong/string() = 'bold'")
+function tests:roundtrip-paragraph-inline-structure() {
+    let $first := md:parse("A paragraph with **bold**, *italic*, and `code`.")
+    return md:parse(md:serialize($first))
+};
+
+declare
+    %test:name("Round-trip: fenced code block preserves language and content")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}fenced-code/@language = 'xquery'")
+function tests:roundtrip-fenced-code-structure() {
+    let $first := md:parse("```xquery
 for $i in 1 to 10
 return
-    <li>{$i * 2}</li>
+    <li>{$i}</li>
+```")
+    return md:parse(md:serialize($first))
+};
+
+declare
+    %test:name("Round-trip: bullet list preserves item count and content")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}list-item) eq 3")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}list/@type = 'bullet'")
+function tests:roundtrip-bullet-list-structure() {
+    md:parse(md:serialize(md:parse("- Alpha
+- Beta
+- Gamma")))
+};
+
+declare
+    %test:name("Round-trip: ordered list preserves item count and content")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}list-item) eq 3")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}list/@type = 'ordered'")
+function tests:roundtrip-ordered-list-structure() {
+    md:parse(md:serialize(md:parse("1. First
+2. Second
+3. Third")))
+};
+
+declare
+    %test:name("Round-trip: link preserves href and text")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}link/@href = 'https://exist-db.org'")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}link/string() = 'eXist-db'")
+function tests:roundtrip-link-structure() {
+    let $first := md:parse('See [eXist-db](https://exist-db.org "eXist Homepage") for details.')
+    return md:parse(md:serialize($first))
+};
+
+declare
+    %test:name("Round-trip: image preserves src, alt, and title")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}image/@src = 'https://example.com/logo.png'")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}image/@alt = 'Logo'")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}image/@title = 'Our Logo'")
+function tests:roundtrip-image-structure() {
+    let $first := md:parse('![Logo](https://example.com/logo.png "Our Logo")')
+    return md:parse(md:serialize($first))
+};
+
+declare
+    %test:name("Round-trip: block quote preserves content")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}blockquote)")
+    %test:assertXPath("contains(string($result//Q{http://exist-db.org/xquery/markdown}blockquote), 'To be or not to be')")
+function tests:roundtrip-blockquote-structure() {
+    md:parse(md:serialize(md:parse("> To be or not to be, that is the question.")))
+};
+
+declare
+    %test:name("Round-trip: table preserves headers and cells")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}th) eq 2")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}td) eq 4")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}th[1]/string() = 'Feature'")
+function tests:roundtrip-table-structure() {
+    md:parse(md:serialize(md:parse("| Feature | Status |
+| --- | --- |
+| Tables | Done |
+| Tasks | WIP |")))
+};
+
+declare
+    %test:name("Round-trip: mixed document preserves all block types")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}heading) eq 1")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}paragraph) ge 1")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}fenced-code) eq 1")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}list-item) eq 2")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}blockquote)")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}fenced-code/@language = 'xquery'")
+function tests:roundtrip-mixed-document() {
+    let $input := "# Heading
+
+A paragraph with **bold** text.
+
+```xquery
+let $x := 1
 ```
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected :=
-        <body>
-            <pre data-language="xquery">{``[for $i in 1 to 10
-return
-    <li>{$i * 2}</li>
-]``}</pre>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+
+- Item one
+- Item two
+
+> A quote."
+    return md:parse(md:serialize(md:parse($input)))
 };
 
-(:========:)
-(: Tables :)
-(:========:)
-
 declare
-    %test:name('Table')
-    %test:assertTrue
-function tests:table() {
-    let $markdown := ``[| Tables        | Are           | Cool  |
-| ------------- |:-------------:| -----:|
-| col 3 is      | right-aligned | $1600 |
-| col 2 is      | **centered**  |   $12 |
-| zebra stripes | are neat      |    $1 |
-
-simple table | column1 | column2
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected :=
-        <body>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th class="head">Tables</th>
-                        <th class="head">Are</th>
-                        <th class="head">Cool</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="left">col 3 is</td>
-                        <td class="center">right-aligned</td>
-                        <td class="right">$1600</td>
-                    </tr>
-                    <tr>
-                        <td class="left">col 2 is</td>
-                        <td class="center"><strong>centered</strong></td>
-                        <td class="right">$12</td>
-                    </tr>
-                    <tr>
-                        <td class="left">zebra stripes</td>
-                        <td class="center">are neat</td>
-                        <td class="right">$1</td>
-                    </tr>
-                </tbody>
-            </table>
-            <table class="table table-bordered">
-                <tbody>
-                    <tr>
-                        <td class="">simple table</td>
-                        <td class="">column1</td>
-                        <td class="">column2</td>
-                    </tr>
-                </tbody>
-            </table>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+    %test:name("Round-trip: strikethrough preserves content")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}strikethrough)")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}strikethrough/string() = 'deleted'")
+function tests:roundtrip-strikethrough-structure() {
+    md:parse(md:serialize(md:parse("This is ~~deleted~~ text.")))
 };
 
-(:=============:)
-(: HTML Blocks :)
-(:=============:)
-
 declare
-    %test:name('HTML block containing markdown')
-    %test:assertTrue
-    %test:pending('Extra body elements are inserted into the divs; div structure is mangled')
-function tests:html-block-containing-markdown() {
-    let $markdown := ``[<div class="row">
-    <div class="col-md-6">
-        First column in **two column layout**.
-        
-        Second paragraph.
-    </div>
-    <div class="col-md-6">
-        Second column in two column layout.
-    </div>
-</div>
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected := 
-        <body>
-            <div class="row">
-                <div class="col-md-6">
-                    <p>First column in <strong>two column layout</strong>.</p>
-                    <p>Second paragraph.</p>
-                </div>
-                <div class="col-md-6">
-                    <p>Second column in two column layout.</p>
-                </div>
-            </div>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+    %test:name("Round-trip: multiple headings preserve levels")
+    %test:assertXPath("count($result//Q{http://exist-db.org/xquery/markdown}heading) eq 3")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}heading[1]/@level = '1'")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}heading[2]/@level = '2'")
+    %test:assertXPath("$result//Q{http://exist-db.org/xquery/markdown}heading[3]/@level = '3'")
+function tests:roundtrip-multiple-headings() {
+    md:parse(md:serialize(md:parse("# H1
+
+## H2
+
+### H3")))
 };
 
-(:=============:)
-(: Inline HTML :)
-(:=============:)
+(:==========================:)
+(: Parser options map tests  :)
+(:==========================:)
 
 declare
-    %test:name('Inline HTML')
-    %test:assertTrue
-    %test:pending('The mark element is dropped from the output')
-function tests:inline-html() {
-    let $markdown := ``[A <span style="color: red;">paragraph <span style="color: green;">containing</span></span> some <mark>inline</mark> <code>HTML</code>.
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected := 
-        <body>
-            <p>A <span style="color: red;">paragraph <span style="color: green;">containing</span></span>
-                some <mark>inline</mark> <code>HTML</code>.</p>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+    %test:name("Options: commonmark profile without extensions ignores tables")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}paragraph)")
+    %test:assertXPath("empty($result//Q{http://exist-db.org/xquery/markdown}table)")
+function tests:options-commonmark-no-extensions() {
+    md:parse("| A | B |
+| --- | --- |
+| 1 | 2 |", map { "profile": "commonmark", "extensions": () })
 };
 
-
-(:=========:)
-(: Headers :)
-(:=========:)
-
 declare
-    %test:name('Atx-style headers and hierarchically nested sections')
-    %test:assertTrue
-function tests:atx-style-headers-and-nested-sections() {
-    let $markdown := ``[# Supported Markdown syntax
-
-A paragraph.
-
-## Lists
-
-Another paragraph.
-
-### Simple list
-
-A third paragraph.
-
-## Inline HTML
-
-A fourth paragraph.
-
-# TEI output
-
-A fifth paragraph.
-]``
-    let $parsed := markdown:parse($markdown)
-    let $expected := 
-        <body>
-            <section>
-                <h1>Supported Markdown syntax</h1>
-                <p>A paragraph.</p>
-                <section>
-                    <h2>Lists</h2>
-                    <p>Another paragraph.</p>
-                    <section>
-                        <h3>Simple list</h3>
-                        <p>A third paragraph.</p>
-                    </section>
-                </section>
-                <section>
-                    <h2>Inline HTML</h2>
-                    <p>A fourth paragraph.</p>
-                </section>
-            </section>
-            <section>
-                <h1>TEI output</h1>
-                <p>A fifth paragraph.</p>
-            </section>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+    %test:name("Options: commonmark profile with tables extension parses tables")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}table)")
+function tests:options-commonmark-with-tables() {
+    md:parse("| A | B |
+| --- | --- |
+| 1 | 2 |", map { "profile": "commonmark", "extensions": "tables" })
 };
 
-(:============:)
-(: TEI output :)
-(:============:)
+declare
+    %test:name("Options: strikethrough disabled leaves ~~ as text")
+    %test:assertXPath("empty($result//Q{http://exist-db.org/xquery/markdown}strikethrough)")
+    %test:assertXPath("contains($result//Q{http://exist-db.org/xquery/markdown}paragraph, '~~deleted~~')")
+function tests:options-no-strikethrough() {
+    md:parse("This is ~~deleted~~ text.", map { "extensions": "tables" })
+};
 
 declare
-    %test:name('TEI output')
-    %test:assertTrue
-function tests:tei-output() {
-    let $markdown := ``[# TEI output
+    %test:name("Options: default profile (github) parses GFM features")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}strikethrough)")
+    %test:assertXPath("exists($result//Q{http://exist-db.org/xquery/markdown}table)")
+function tests:options-default-github() {
+    md:parse("~~struck~~ and | A |
+| --- |
+| 1 |")
+};
 
-Besides producing HTML, the module can also transform Markdown into TEI. 
-Other output formats can be supported as well by adding a simple configuration, see [tei-config.xql](https://github.com/eXist-db/exist-markdown/blob/master/content/tei-config.xqm).
-]``
-    let $parsed := markdown:parse($markdown, $mdt:CONFIG)
-    let $expected := 
-        <body xmlns="http://www.tei-c.org/ns/1.0">
-            <div>
-                <head n="1">TEI output</head>
-                <p>Besides producing HTML, the module can also transform Markdown into TEI. Other output formats can be supported as well by adding a simple configuration, see <ref target="https://github.com/eXist-db/exist-markdown/blob/master/content/tei-config.xqm">tei-config.xql</ref>.</p>
-            </div>
-        </body>
-    return
-        deep-equal($parsed, $expected)
+declare
+    %test:name("Options: to-html with commonmark profile")
+    %test:assertXPath("$result/self::p")
+    %test:assertXPath("contains($result, '~~not struck~~')")
+function tests:options-to-html-commonmark() {
+    md:to-html("~~not struck~~", map { "profile": "commonmark", "extensions": () })
 };
