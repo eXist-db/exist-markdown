@@ -15,9 +15,10 @@ public class SerializeFunction extends BasicFunction {
     public static final FunctionSignature[] signatures = {
         new FunctionSignature(
             new QName("serialize", MarkdownModule.NAMESPACE_URI, MarkdownModule.PREFIX),
-            "Serializes md:* XML nodes (from md:parse) back to CommonMark markdown text. " +
-            "This enables round-trip processing: md:serialize(md:parse($markdown)) " +
-            "produces structurally equivalent markdown to the original input.",
+            """
+            Serializes md:* XML nodes (from md:parse) back to CommonMark markdown text. \
+            This enables round-trip processing: md:serialize(md:parse($markdown)) \
+            produces structurally equivalent markdown to the original input.""",
             new SequenceType[] {
                 new FunctionParameterSequenceType("nodes", TypeCompat.NODE, Cardinality.ZERO_OR_MORE,
                     "The md:* XML nodes to serialize")
@@ -41,8 +42,8 @@ public class SerializeFunction extends BasicFunction {
         final SequenceIterator iter = args[0].iterate();
         while (iter.hasNext()) {
             final Item item = iter.nextItem();
-            if (item instanceof org.w3c.dom.Node) {
-                serializeNode((org.w3c.dom.Node) item, sb, 0);
+            if (item instanceof org.w3c.dom.Node n) {
+                serializeNode(n, sb, 0);
             }
         }
 
@@ -73,23 +74,19 @@ public class SerializeFunction extends BasicFunction {
         final Element elem = (Element) node;
 
         switch (localName) {
-            case "document":
-                serializeChildren(node, sb, listDepth);
-                break;
+            case "document" -> serializeChildren(node, sb, listDepth);
 
-            case "heading": {
+            case "heading" -> {
                 final int level = Integer.parseInt(elem.getAttribute("level"));
                 sb.append("#".repeat(level)).append(" ");
                 serializeInlineChildren(node, sb);
                 sb.append("\n\n");
-                break;
             }
-            case "paragraph":
+            case "paragraph" -> {
                 serializeInlineChildren(node, sb);
                 sb.append("\n\n");
-                break;
-
-            case "fenced-code": {
+            }
+            case "fenced-code" -> {
                 final String lang = elem.getAttribute("language");
                 sb.append("```");
                 if (lang != null && !lang.isEmpty()) {
@@ -98,15 +95,13 @@ public class SerializeFunction extends BasicFunction {
                 sb.append("\n");
                 sb.append(node.getTextContent());
                 sb.append("\n```\n\n");
-                break;
             }
-            case "code-block":
+            case "code-block" -> {
                 sb.append("```\n");
                 sb.append(node.getTextContent());
                 sb.append("\n```\n\n");
-                break;
-
-            case "list": {
+            }
+            case "list" -> {
                 final String type = elem.getAttribute("type");
                 final NodeList items = node.getChildNodes();
                 int counter = 1;
@@ -127,48 +122,36 @@ public class SerializeFunction extends BasicFunction {
                 if (listDepth == 0) {
                     sb.append("\n");
                 }
-                break;
             }
-            case "blockquote": {
+            case "blockquote" -> {
                 final String content = serializeToString(node, 0).trim();
                 for (final String line : content.split("\n")) {
                     sb.append("> ").append(line).append("\n");
                 }
                 sb.append("\n");
-                break;
             }
-            case "thematic-break":
-                sb.append("---\n\n");
-                break;
+            case "thematic-break" -> sb.append("---\n\n");
 
-            case "table":
+            case "table" -> {
                 serializeTable(node, sb);
                 sb.append("\n");
-                break;
-
-            case "html-block":
-            case "html-inline":
-                sb.append(node.getTextContent());
-                break;
+            }
+            case "html-block", "html-inline" -> sb.append(node.getTextContent());
 
             // inline elements
-            case "code":
-                sb.append("`").append(node.getTextContent()).append("`");
-                break;
+            case "code" -> sb.append("`").append(node.getTextContent()).append("`");
 
-            case "emphasis":
+            case "emphasis" -> {
                 sb.append("*");
                 serializeInlineChildren(node, sb);
                 sb.append("*");
-                break;
-
-            case "strong":
+            }
+            case "strong" -> {
                 sb.append("**");
                 serializeInlineChildren(node, sb);
                 sb.append("**");
-                break;
-
-            case "link": {
+            }
+            case "link" -> {
                 final String href = elem.getAttribute("href");
                 final String title = elem.getAttribute("title");
                 sb.append("[");
@@ -178,9 +161,8 @@ public class SerializeFunction extends BasicFunction {
                     sb.append(" \"").append(title).append("\"");
                 }
                 sb.append(")");
-                break;
             }
-            case "image": {
+            case "image" -> {
                 final String src = elem.getAttribute("src");
                 final String alt = elem.getAttribute("alt");
                 final String title = elem.getAttribute("title");
@@ -190,21 +172,15 @@ public class SerializeFunction extends BasicFunction {
                     sb.append(" \"").append(title).append("\"");
                 }
                 sb.append(")");
-                break;
             }
-            case "strikethrough":
+            case "strikethrough" -> {
                 sb.append("~~");
                 serializeInlineChildren(node, sb);
                 sb.append("~~");
-                break;
+            }
+            case "linebreak" -> sb.append("  \n");
 
-            case "linebreak":
-                sb.append("  \n");
-                break;
-
-            default:
-                serializeChildren(node, sb, listDepth);
-                break;
+            default -> serializeChildren(node, sb, listDepth);
         }
     }
 

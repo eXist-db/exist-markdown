@@ -24,17 +24,17 @@ import org.xml.sax.helpers.AttributesImpl;
  */
 public class ToHtmlFunction extends BasicFunction {
 
-    private static final String FN_TO_HTML_DESCRIPTION =
-            "Renders markdown to HTML. Pass a markdown string to parse and render directly, " +
-            "or pass md:* XML nodes (from md:parse) to selectively render individual parsed elements. " +
-            "This dual-dispatch enables use cases like rendering prose as HTML while handling " +
-            "code blocks with a custom renderer.";
+    private static final String FN_TO_HTML_DESCRIPTION = """
+            Renders markdown to HTML. Pass a markdown string to parse and render directly, \
+            or pass md:* XML nodes (from md:parse) to selectively render individual parsed elements. \
+            This dual-dispatch enables use cases like rendering prose as HTML while handling \
+            code blocks with a custom renderer.""";
 
-    private static final String FN_TO_HTML_OPTIONS_DESCRIPTION =
-            "Renders markdown to HTML with custom parser options. " +
-            "Options: 'profile', 'extensions', 'hard-wraps' (see md:parse for details). " +
-            "Parser options only apply when the input is a markdown string; " +
-            "they are ignored when the input is md:* XML nodes.";
+    private static final String FN_TO_HTML_OPTIONS_DESCRIPTION = """
+            Renders markdown to HTML with custom parser options. \
+            Options: 'profile', 'extensions', 'hard-wraps' (see md:parse for details). \
+            Parser options only apply when the input is a markdown string; \
+            they are ignored when the input is md:* XML nodes.""";
 
     public static final FunctionSignature[] signatures = {
         new FunctionSignature(
@@ -115,8 +115,8 @@ public class ToHtmlFunction extends BasicFunction {
             final SequenceIterator iter = nodes.iterate();
             while (iter.hasNext()) {
                 final Item item = iter.nextItem();
-                if (item instanceof org.w3c.dom.Node) {
-                    transformNodeToHtml((org.w3c.dom.Node) item, builder);
+                if (item instanceof org.w3c.dom.Node n) {
+                    transformNodeToHtml(n, builder);
                 }
             }
 
@@ -147,210 +147,194 @@ public class ToHtmlFunction extends BasicFunction {
     // --- Flexmark AST to HTML ---
 
     private void buildHtml(final Node node, final MemTreeBuilder builder) {
-        if (node instanceof Heading) {
-            builder.startElement(htmlQName("h" + ((Heading) node).getLevel()), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof Paragraph) {
-            builder.startElement(htmlQName("p"), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof FencedCodeBlock) {
-            final FencedCodeBlock code = (FencedCodeBlock) node;
-            builder.startElement(htmlQName("pre"), null);
-            final String lang = code.getInfo().toString().trim();
-            final AttributesImpl attrs = new AttributesImpl();
-            if (!lang.isEmpty()) {
-                attrs.addAttribute("", "class", "class", "CDATA", "language-" + lang);
+        switch (node) {
+            case Heading heading -> {
+                builder.startElement(htmlQName("h" + heading.getLevel()), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
             }
-            builder.startElement(htmlQName("code"), attrs.getLength() > 0 ? attrs : null);
-            String content = code.getContentChars().toString();
-            if (content.endsWith("\n")) {
-                content = content.substring(0, content.length() - 1);
+            case Paragraph p -> {
+                builder.startElement(htmlQName("p"), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
             }
-            builder.characters(content);
-            builder.endElement();
-            builder.endElement();
-
-        } else if (node instanceof IndentedCodeBlock) {
-            builder.startElement(htmlQName("pre"), null);
-            builder.startElement(htmlQName("code"), null);
-            String content = ((IndentedCodeBlock) node).getContentChars().toString();
-            if (content.endsWith("\n")) {
-                content = content.substring(0, content.length() - 1);
-            }
-            builder.characters(content);
-            builder.endElement();
-            builder.endElement();
-
-        } else if (node instanceof BulletList) {
-            builder.startElement(htmlQName("ul"), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof OrderedList) {
-            final OrderedList ol = (OrderedList) node;
-            final AttributesImpl attrs = new AttributesImpl();
-            if (ol.getStartNumber() != 1) {
-                attrs.addAttribute("", "start", "start", "CDATA", String.valueOf(ol.getStartNumber()));
-            }
-            builder.startElement(htmlQName("ol"), attrs.getLength() > 0 ? attrs : null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof TaskListItem) {
-            final TaskListItem task = (TaskListItem) node;
-            builder.startElement(htmlQName("li"), null);
-            final AttributesImpl cbAttrs = new AttributesImpl();
-            cbAttrs.addAttribute("", "type", "type", "CDATA", "checkbox");
-            cbAttrs.addAttribute("", "disabled", "disabled", "CDATA", "disabled");
-            if (task.isItemDoneMarker()) {
-                cbAttrs.addAttribute("", "checked", "checked", "CDATA", "checked");
-            }
-            builder.startElement(htmlQName("input"), cbAttrs);
-            builder.endElement();
-            builder.characters(" ");
-            // render children but skip the first Paragraph wrapper if present
-            for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
-                if (child instanceof Paragraph) {
-                    buildChildrenHtml(child, builder);
-                } else {
-                    buildHtml(child, builder);
+            case FencedCodeBlock code -> {
+                builder.startElement(htmlQName("pre"), null);
+                final String lang = code.getInfo().toString().trim();
+                final AttributesImpl attrs = new AttributesImpl();
+                if (!lang.isEmpty()) {
+                    attrs.addAttribute("", "class", "class", "CDATA", "language-" + lang);
                 }
-            }
-            builder.endElement();
-
-        } else if (node instanceof ListItem) {
-            builder.startElement(htmlQName("li"), null);
-            // unwrap single paragraph in list items
-            for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
-                if (child instanceof Paragraph && node.getFirstChild() == node.getLastChild()) {
-                    buildChildrenHtml(child, builder);
-                } else {
-                    buildHtml(child, builder);
+                builder.startElement(htmlQName("code"), attrs.getLength() > 0 ? attrs : null);
+                String content = code.getContentChars().toString();
+                if (content.endsWith("\n")) {
+                    content = content.substring(0, content.length() - 1);
                 }
+                builder.characters(content);
+                builder.endElement();
+                builder.endElement();
             }
-            builder.endElement();
-
-        } else if (node instanceof BlockQuote) {
-            builder.startElement(htmlQName("blockquote"), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof ThematicBreak) {
-            builder.startElement(htmlQName("hr"), null);
-            builder.endElement();
-
-        } else if (node instanceof HtmlBlock) {
-            builder.characters(((HtmlBlock) node).getChars().toString());
-
-        } else if (node instanceof Code) {
-            builder.startElement(htmlQName("code"), null);
-            builder.characters(((Code) node).getText().toString());
-            builder.endElement();
-
-        } else if (node instanceof Emphasis) {
-            builder.startElement(htmlQName("em"), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof StrongEmphasis) {
-            builder.startElement(htmlQName("strong"), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof Link) {
-            final Link link = (Link) node;
-            final AttributesImpl attrs = new AttributesImpl();
-            attrs.addAttribute("", "href", "href", "CDATA", link.getUrl().toString());
-            final String title = link.getTitle().toString();
-            if (!title.isEmpty()) {
-                attrs.addAttribute("", "title", "title", "CDATA", title);
+            case IndentedCodeBlock code -> {
+                builder.startElement(htmlQName("pre"), null);
+                builder.startElement(htmlQName("code"), null);
+                String content = code.getContentChars().toString();
+                if (content.endsWith("\n")) {
+                    content = content.substring(0, content.length() - 1);
+                }
+                builder.characters(content);
+                builder.endElement();
+                builder.endElement();
             }
-            builder.startElement(htmlQName("a"), attrs);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof AutoLink) {
-            final String url = ((AutoLink) node).getUrl().toString();
-            final AttributesImpl attrs = new AttributesImpl();
-            attrs.addAttribute("", "href", "href", "CDATA", url);
-            builder.startElement(htmlQName("a"), attrs);
-            builder.characters(url);
-            builder.endElement();
-
-        } else if (node instanceof Image) {
-            final Image image = (Image) node;
-            final AttributesImpl attrs = new AttributesImpl();
-            attrs.addAttribute("", "src", "src", "CDATA", image.getUrl().toString());
-            attrs.addAttribute("", "alt", "alt", "CDATA", ParseFunction.collectText(image));
-            final String title = image.getTitle().toString();
-            if (!title.isEmpty()) {
-                attrs.addAttribute("", "title", "title", "CDATA", title);
+            case BulletList bl -> {
+                builder.startElement(htmlQName("ul"), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
             }
-            builder.startElement(htmlQName("img"), attrs);
-            builder.endElement();
-
-        } else if (node instanceof Strikethrough) {
-            builder.startElement(htmlQName("del"), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof SoftLineBreak) {
-            builder.characters("\n");
-
-        } else if (node instanceof HardLineBreak) {
-            builder.startElement(htmlQName("br"), null);
-            builder.endElement();
-
-        } else if (node instanceof HtmlInline) {
-            builder.characters(((HtmlInline) node).getChars().toString());
-
-        } else if (node instanceof Text) {
-            builder.characters(((Text) node).getChars().toString());
-
-        } else if (node instanceof TextBase) {
-            buildChildrenHtml(node, builder);
-
-        } else if (node instanceof TableBlock) {
-            builder.startElement(htmlQName("table"), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof TableHead) {
-            builder.startElement(htmlQName("thead"), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof TableBody) {
-            builder.startElement(htmlQName("tbody"), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof TableRow) {
-            builder.startElement(htmlQName("tr"), null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof TableCell) {
-            final TableCell cell = (TableCell) node;
-            final String elemName = cell.isHeader() ? "th" : "td";
-            final AttributesImpl attrs = new AttributesImpl();
-            if (cell.getAlignment() != null) {
-                final String align = cell.getAlignment().name().toLowerCase();
-                attrs.addAttribute("", "style", "style", "CDATA", "text-align: " + align);
+            case OrderedList ol -> {
+                final AttributesImpl attrs = new AttributesImpl();
+                if (ol.getStartNumber() != 1) {
+                    attrs.addAttribute("", "start", "start", "CDATA", String.valueOf(ol.getStartNumber()));
+                }
+                builder.startElement(htmlQName("ol"), attrs.getLength() > 0 ? attrs : null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
             }
-            builder.startElement(htmlQName(elemName), attrs.getLength() > 0 ? attrs : null);
-            buildChildrenHtml(node, builder);
-            builder.endElement();
-
-        } else if (node instanceof TableSeparator) {
-            // skip
-
-        } else {
-            buildChildrenHtml(node, builder);
+            case TaskListItem task -> {
+                builder.startElement(htmlQName("li"), null);
+                final AttributesImpl cbAttrs = new AttributesImpl();
+                cbAttrs.addAttribute("", "type", "type", "CDATA", "checkbox");
+                cbAttrs.addAttribute("", "disabled", "disabled", "CDATA", "disabled");
+                if (task.isItemDoneMarker()) {
+                    cbAttrs.addAttribute("", "checked", "checked", "CDATA", "checked");
+                }
+                builder.startElement(htmlQName("input"), cbAttrs);
+                builder.endElement();
+                builder.characters(" ");
+                // render children but skip the first Paragraph wrapper if present
+                for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
+                    if (child instanceof Paragraph) {
+                        buildChildrenHtml(child, builder);
+                    } else {
+                        buildHtml(child, builder);
+                    }
+                }
+                builder.endElement();
+            }
+            case ListItem li -> {
+                builder.startElement(htmlQName("li"), null);
+                // unwrap single paragraph in list items
+                for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
+                    if (child instanceof Paragraph && node.getFirstChild() == node.getLastChild()) {
+                        buildChildrenHtml(child, builder);
+                    } else {
+                        buildHtml(child, builder);
+                    }
+                }
+                builder.endElement();
+            }
+            case BlockQuote bq -> {
+                builder.startElement(htmlQName("blockquote"), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
+            }
+            case ThematicBreak tb -> {
+                builder.startElement(htmlQName("hr"), null);
+                builder.endElement();
+            }
+            case HtmlBlock hb -> builder.characters(hb.getChars().toString());
+            case Code c -> {
+                builder.startElement(htmlQName("code"), null);
+                builder.characters(c.getText().toString());
+                builder.endElement();
+            }
+            case Emphasis e -> {
+                builder.startElement(htmlQName("em"), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
+            }
+            case StrongEmphasis se -> {
+                builder.startElement(htmlQName("strong"), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
+            }
+            case Link link -> {
+                final AttributesImpl attrs = new AttributesImpl();
+                attrs.addAttribute("", "href", "href", "CDATA", link.getUrl().toString());
+                final String title = link.getTitle().toString();
+                if (!title.isEmpty()) {
+                    attrs.addAttribute("", "title", "title", "CDATA", title);
+                }
+                builder.startElement(htmlQName("a"), attrs);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
+            }
+            case AutoLink autoLink -> {
+                final String url = autoLink.getUrl().toString();
+                final AttributesImpl attrs = new AttributesImpl();
+                attrs.addAttribute("", "href", "href", "CDATA", url);
+                builder.startElement(htmlQName("a"), attrs);
+                builder.characters(url);
+                builder.endElement();
+            }
+            case Image image -> {
+                final AttributesImpl attrs = new AttributesImpl();
+                attrs.addAttribute("", "src", "src", "CDATA", image.getUrl().toString());
+                attrs.addAttribute("", "alt", "alt", "CDATA", ParseFunction.collectText(image));
+                final String title = image.getTitle().toString();
+                if (!title.isEmpty()) {
+                    attrs.addAttribute("", "title", "title", "CDATA", title);
+                }
+                builder.startElement(htmlQName("img"), attrs);
+                builder.endElement();
+            }
+            case Strikethrough s -> {
+                builder.startElement(htmlQName("del"), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
+            }
+            case SoftLineBreak slb -> builder.characters("\n");
+            case HardLineBreak hlb -> {
+                builder.startElement(htmlQName("br"), null);
+                builder.endElement();
+            }
+            case HtmlInline hi -> builder.characters(hi.getChars().toString());
+            case Text t -> builder.characters(t.getChars().toString());
+            case TextBase tb -> buildChildrenHtml(node, builder);
+            case TableBlock t -> {
+                builder.startElement(htmlQName("table"), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
+            }
+            case TableHead th -> {
+                builder.startElement(htmlQName("thead"), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
+            }
+            case TableBody tb -> {
+                builder.startElement(htmlQName("tbody"), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
+            }
+            case TableRow tr -> {
+                builder.startElement(htmlQName("tr"), null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
+            }
+            case TableCell cell -> {
+                final String elemName = cell.isHeader() ? "th" : "td";
+                final AttributesImpl attrs = new AttributesImpl();
+                if (cell.getAlignment() != null) {
+                    final String align = cell.getAlignment().name().toLowerCase();
+                    attrs.addAttribute("", "style", "style", "CDATA", "text-align: " + align);
+                }
+                builder.startElement(htmlQName(elemName), attrs.getLength() > 0 ? attrs : null);
+                buildChildrenHtml(node, builder);
+                builder.endElement();
+            }
+            case TableSeparator ts -> {
+                // skip
+            }
+            default -> buildChildrenHtml(node, builder);
         }
     }
 
@@ -390,24 +374,20 @@ public class ToHtmlFunction extends BasicFunction {
         final Element elem = (Element) node;
 
         switch (localName) {
-            case "document":
-                transformChildrenToHtml(node, builder);
-                break;
+            case "document" -> transformChildrenToHtml(node, builder);
 
-            case "heading": {
+            case "heading" -> {
                 final int level = Integer.parseInt(elem.getAttribute("level"));
                 builder.startElement(htmlQName("h" + level), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
             }
-            case "paragraph":
+            case "paragraph" -> {
                 builder.startElement(htmlQName("p"), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
-
-            case "fenced-code": {
+            }
+            case "fenced-code" -> {
                 builder.startElement(htmlQName("pre"), null);
                 final String lang = elem.getAttribute("language");
                 final AttributesImpl attrs = new AttributesImpl();
@@ -418,25 +398,22 @@ public class ToHtmlFunction extends BasicFunction {
                 builder.characters(node.getTextContent());
                 builder.endElement();
                 builder.endElement();
-                break;
             }
-            case "code-block":
+            case "code-block" -> {
                 builder.startElement(htmlQName("pre"), null);
                 builder.startElement(htmlQName("code"), null);
                 builder.characters(node.getTextContent());
                 builder.endElement();
                 builder.endElement();
-                break;
-
-            case "list": {
+            }
+            case "list" -> {
                 final String type = elem.getAttribute("type");
                 final String tag = "ordered".equals(type) ? "ol" : "ul";
                 builder.startElement(htmlQName(tag), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
             }
-            case "list-item": {
+            case "list-item" -> {
                 builder.startElement(htmlQName("li"), null);
                 final String task = elem.getAttribute("task");
                 if ("true".equals(task)) {
@@ -453,38 +430,32 @@ public class ToHtmlFunction extends BasicFunction {
                 }
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
             }
-            case "blockquote":
+            case "blockquote" -> {
                 builder.startElement(htmlQName("blockquote"), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
-
-            case "thematic-break":
+            }
+            case "thematic-break" -> {
                 builder.startElement(htmlQName("hr"), null);
                 builder.endElement();
-                break;
-
-            case "code":
+            }
+            case "code" -> {
                 builder.startElement(htmlQName("code"), null);
                 builder.characters(node.getTextContent());
                 builder.endElement();
-                break;
-
-            case "emphasis":
+            }
+            case "emphasis" -> {
                 builder.startElement(htmlQName("em"), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
-
-            case "strong":
+            }
+            case "strong" -> {
                 builder.startElement(htmlQName("strong"), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
-
-            case "link": {
+            }
+            case "link" -> {
                 final AttributesImpl attrs = new AttributesImpl();
                 final String href = elem.getAttribute("href");
                 if (href != null && !href.isEmpty()) {
@@ -497,9 +468,8 @@ public class ToHtmlFunction extends BasicFunction {
                 builder.startElement(htmlQName("a"), attrs.getLength() > 0 ? attrs : null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
             }
-            case "image": {
+            case "image" -> {
                 final AttributesImpl attrs = new AttributesImpl();
                 attrs.addAttribute("", "src", "src", "CDATA", elem.getAttribute("src"));
                 final String alt = elem.getAttribute("alt");
@@ -512,50 +482,39 @@ public class ToHtmlFunction extends BasicFunction {
                 }
                 builder.startElement(htmlQName("img"), attrs);
                 builder.endElement();
-                break;
             }
-            case "strikethrough":
+            case "strikethrough" -> {
                 builder.startElement(htmlQName("del"), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
-
-            case "linebreak":
+            }
+            case "linebreak" -> {
                 builder.startElement(htmlQName("br"), null);
                 builder.endElement();
-                break;
+            }
+            case "html-block", "html-inline" -> builder.characters(node.getTextContent());
 
-            case "html-block":
-            case "html-inline":
-                builder.characters(node.getTextContent());
-                break;
-
-            case "table":
+            case "table" -> {
                 builder.startElement(htmlQName("table"), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
-
-            case "thead":
+            }
+            case "thead" -> {
                 builder.startElement(htmlQName("thead"), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
-
-            case "tbody":
+            }
+            case "tbody" -> {
                 builder.startElement(htmlQName("tbody"), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
-
-            case "tr":
+            }
+            case "tr" -> {
                 builder.startElement(htmlQName("tr"), null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
-
-            case "th":
-            case "td": {
+            }
+            case "th", "td" -> {
                 final AttributesImpl attrs = new AttributesImpl();
                 final String align = elem.getAttribute("align");
                 if (align != null && !align.isEmpty()) {
@@ -564,11 +523,8 @@ public class ToHtmlFunction extends BasicFunction {
                 builder.startElement(htmlQName(localName), attrs.getLength() > 0 ? attrs : null);
                 transformChildrenToHtml(node, builder);
                 builder.endElement();
-                break;
             }
-            default:
-                transformChildrenToHtml(node, builder);
-                break;
+            default -> transformChildrenToHtml(node, builder);
         }
     }
 
