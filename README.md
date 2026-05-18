@@ -9,7 +9,7 @@ A Java extension module using [flexmark-java](https://github.com/vsch/flexmark-j
 
 ## Requirements
 
-- [eXist-db](https://exist-db.org) version `6.2.0` or greater
+- [eXist-db](https://exist-db.org) version `7.0.0-SNAPSHOT` or greater
 - [Java](https://adoptium.net/) version `21` or greater (for building from source)
 - [Maven](https://maven.apache.org/) version `3.9` or greater (for building from source)
 
