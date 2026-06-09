@@ -9,29 +9,41 @@ A Java extension module using [flexmark-java](https://github.com/vsch/flexmark-j
 
 ## Requirements
 
-- [eXist-db](https://exist-db.org) version `7.0.0-SNAPSHOT` or greater
-- [Java](https://adoptium.net/) version `21` or greater (for building from source)
-- [Maven](https://maven.apache.org/) version `3.9` or greater (for building from source)
+To run the module:
+
+- [eXist-db](https://exist-db.org) version `7.0.0` or greater (the `7.0.x` series, including pre-releases such as `7.0.0-beta3`).
+
+  > **The package requires eXist-db 7.0.0+ and will not install on the 6.x series.** This is a Java extension module compiled for Java 21, and its namespace-to-class registration relies on eXist-db 7's package classloading.
+
+To build from source:
+
+- [Java](https://adoptium.net/) version `21` or greater
+- [Maven](https://maven.apache.org/) version `3.9` or greater
 
 ## Installation
 
-1. Download the `exist-markdown-3.0.0.xar` file from the GitHub [releases](https://github.com/eXist-db/exist-markdown/releases) page.
+Install a released `.xar` from the GitHub [releases](https://github.com/eXist-db/exist-markdown/releases) page via the [dashboard](http://localhost:8080/exist/apps/dashboard) package manager, or use the [xst](https://www.npmjs.com/package/@existdb/xst) command-line tool.
 
-2. Install it via the [dashboard](http://localhost:8080/exist/apps/dashboard/index.html) package manager, or use the [xst](https://www.npmjs.com/package/@existdb/xst) command-line tool:
+### Build and install from source
 
-```bash
-xst package install local exist-markdown-3.0.0.xar
-```
-
-### Building from source
+The following sequence clones the repository, builds the `.xar` with Maven, and installs it into a running eXist-db 7.0.0+ instance with [xst](https://www.npmjs.com/package/@existdb/xst):
 
 ```bash
+# Clone and build
 git clone https://github.com/eXist-db/exist-markdown
 cd exist-markdown
 mvn clean package
+
+# Install into a running eXist-db (defaults to http://localhost:8080, user "admin")
+xst package install local target/exist-markdown-3.0.0.xar
 ```
 
-The XAR package will be at `target/exist-markdown-3.0.0.xar`.
+To target a different instance or credentials, point xst at it explicitly:
+
+```bash
+EXISTDB_SERVER=http://localhost:8080/exist EXISTDB_USER=admin EXISTDB_PASS=secret \
+  xst package install local target/exist-markdown-3.0.0.xar
+```
 
 ## API
 
