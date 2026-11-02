@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.exist-db</groupId>
+        <artifactId>exist-apps-parent</artifactId>
+        <version>2.0.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>org.exist-db</groupId>
+    <artifactId>exist-markdown</artifactId>
+    <version>3.0.0</version>
+
+    <name>Markdown Module</name>
+    <description>CommonMark/GFM markdown parser for eXist-db using flexmark-java</description>
+    <url>https://github.com/eXist-db/exist-markdown</url>
+
+    <organization>
+        <name>The eXist-db Authors</name>
+        <url>https://exist-db.org</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>GNU Lesser General Public License, version 2.1</name>
+            <url>https://opensource.org/licenses/LGPL-2.1</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/eXist-db/exist-markdown.git</url>
+        <connection>scm:git:https://github.com/eXist-db/exist-markdown.git</connection>
+        <developerConnection>scm:git:https://github.com/eXist-db/exist-markdown.git</developerConnection>
+    </scm>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.source>21</project.build.source>
+        <project.build.target>21</project.build.target>
+
+        <exist.version>7.0.0-SNAPSHOT</exist.version>
+        <flexmark.version>0.64.8</flexmark.version>
+
+        <!-- used in the EXPath Package Descriptor -->
+        <package-name>http://exist-db.org/apps/markdown</package-name>
+        <package-abbrev>markdown</package-abbrev>
+
+        <markdown.module.namespace>http://exist-db.org/xquery/markdown</markdown.module.namespace>
+        <markdown.module.java.classname>org.exist.xquery.modules.markdown.MarkdownModule</markdown.module.java.classname>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.exist-db</groupId>
+            <artifactId>exist-core</artifactId>
+            <version>${exist.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.exist-db</groupId>
+            <artifactId>exist-start</artifactId>
+            <version>${exist.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- flexmark-java CommonMark/GFM parser -->
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-tables</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-gfm-strikethrough</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-gfm-tasklist</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-autolink</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>ro.kuberam.maven.plugins</groupId>
+                <artifactId>kuberam-expath-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>exist-db</id>
+            <name>eXist-db Releases</name>
+            <url>https://repo.exist-db.org/repository/exist-db/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>exist-db-snapshots</id>
+            <name>eXist-db Snapshots</name>
+            <url>https://repo.exist-db.org/repository/exist-db-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+</project>
